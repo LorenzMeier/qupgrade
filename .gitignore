@@ -1,0 +1,8 @@
+.DS_Store
+*.pro.user
+*__Debug
+*__Release
+*.xcodeproj
+*.prf
+*.prf.in
+src/apps/qupgrade_old
