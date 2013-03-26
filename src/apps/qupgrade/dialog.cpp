@@ -24,8 +24,6 @@ Dialog::Dialog(QWidget *parent) :
 
 //    ui->led->turnOff();
 
-    timer = new QTimer(this);
-    timer->setInterval(40);
     //! [1]
     PortSettings settings = {BAUD9600, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
     port = new QextSerialPort(ui->portBox->currentText(), settings, QextSerialPort::Polling);
@@ -36,13 +34,11 @@ Dialog::Dialog(QWidget *parent) :
 
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
     connect(ui->uploadButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
-    //connect(timer, SIGNAL(timeout()), SLOT(onReadyRead()));
-    //connect(port, SIGNAL(readyRead()), SLOT(onReadyRead()));
 
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
 
-    setWindowTitle(tr("QextSerialPort Demo"));
+    setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 }
 
 Dialog::~Dialog()
@@ -121,28 +117,24 @@ void Dialog::onUploadButtonClicked()
 
             port->setPortName(openString);
 
-            if (fileName.endsWith(".px4")) {
-                qDebug() << "PX4 files not yet supported";
-                // XXX unpack JSON, compare board rev
-            } else if (fileName.endsWith(".bin")) {
-                // Die-hard flash the binary
-                qDebug() << "ATTEMPTING TO FLASH" << fileName << "ON PORT" << port->portName();
+            // Die-hard flash the binary
+            qDebug() << "ATTEMPTING TO FLASH" << fileName << "ON PORT" << port->portName();
 
-                quint32 board_id;
-                quint32 board_rev;
-                quint32 flash_size;
-                bool insync = false;
-                QString humanReadable;
-                //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
+//            quint32 board_id;
+//            quint32 board_rev;
+//            quint32 flash_size;
+//            bool insync = false;
+//            QString humanReadable;
+            //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
 
-                int ret = uploader.upload(fileName, insync);
+            int ret = uploader.upload(fileName);
+            return;
 
-                port->close();
+            port->close();
 
-                // bail out on success
-                if (ret == 0)
-                    return;
-            }
+            // bail out on success
+            if (ret == 0)
+                return;
         }
 
         usleep(100000);

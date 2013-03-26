@@ -53,6 +53,11 @@
 
 #include <QtGlobal>
 #include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTemporaryFile>
+#include <QDebug>
+#include <QDir>
 //#include "SerialLink.h"
 
 #undef OK
@@ -191,41 +196,82 @@ PX4_Uploader::upload(const QString& filename, bool insync)
     unsigned int checkBoardId = 5;
     unsigned int checkBoardMinRev = 0;
     unsigned int checkBoardMaxRev = 99;
+    bool tempfile = false;
 
 	int	ret;
 	size_t fw_size;
 
     if (_io_fd->isOpen() || !_io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
-		log("could not open interface");
+        log("could not open interface");
         return -1;
-	}
+    }
 
-	/* look for the bootloader */
-	ret = sync();
+    /* look for the bootloader */
+    ret = sync();
 
-	if (ret != OK) {
-		/* this is immediately fatal */
-		log("bootloader not responding");
+    if (ret != OK) {
+        /* this is immediately fatal */
+        log("bootloader not responding");
         return ret;
-	}
+    }
 
-    _fw_fd.close();
-    _fw_fd.setFileName(filename);
+    if (filename.endsWith(".px4")) {
+        log("decoding JSON");
+        // Attempt to decode JSON
+        QFile json(filename);
+        json.open(QIODevice::ReadOnly | QIODevice::Text);
+        QString jsonStr = json.readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
 
-    _fw_fd.open(QIODevice::ReadOnly);
+        if (doc.isNull()) {
+            // Error, bail out
+            log("supplied file is not a valid JSON document");
+            return -1;
+        }
+
+        QJsonObject px4 = doc.object();
+
+        checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
+        log("loaded file for board ID %d", checkBoardId);
+        QString str = px4.value(QString("description")).toString();
+        log("description: %s", str.toStdString().c_str());
+
+        _fw_fd.setFileName(QDir::tempPath() + "/px4upload" + QGC::groundTimeMilliseconds() + ".bin");
+        _fw_fd.open(QIODevice::ReadWrite);
+        QByteArray b = QByteArray::fromBase64(qUncompress(px4.value(QString("image")).toVariant().toByteArray()));
+        _fw_fd.write(b);
+        _fw_fd.seek(0);
+        tempfile = true;
+
+    } else if (filename.endsWith(".bin")) {
+        // Already a binary file
+
+        // Take some educated guesses based on file name
+        if (filename.toLower().contains("px4io")) {
+            checkBoardId = 6;
+        } else if (filename.toLower().contains("px4flow")) {
+            checkBoardId = 7;
+        } else if (filename.toLower().contains("px4fmu")) {
+            checkBoardId = 5;
+        }
+
+        _fw_fd.close();
+        _fw_fd.setFileName(filename);
+        _fw_fd.open(QIODevice::ReadOnly);
+
+    } else {
+        log("unrecognized file ending, exiting.");
+        return -1;
+    }
 
     if (!_fw_fd.isOpen()) {
         log("failed to open %s", filename.toStdString().c_str());
+        return -ENOENT;
     }
 
-    log("using firmware from %s", filename.toStdString().c_str());
-
-    if (filename.isEmpty()) {
-		log("no firmware found");
-		return -ENOENT;
-	}
-
     fw_size = _fw_fd.size();
+
+    log("using firmware from %s", filename.toStdString().c_str());
 
 	/* do the usual program thing - allow for failure */
 	for (unsigned retries = 0; retries < 1; retries++) {
@@ -331,6 +377,14 @@ PX4_Uploader::upload(const QString& filename, bool insync)
 	}
 
     _fw_fd.close();
+
+    if (tempfile) {
+        qDebug() << "Deleting" << _fw_fd.fileName();
+        if (!_fw_fd.remove()) {
+            log("failed removing temporary file");
+        }
+    }
+
 	return ret;
 }
 
@@ -340,7 +394,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
     quint64 startTime = QGC::groundTimeMilliseconds();
 
     while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
-        SLEEP::usleep(1000);
+        SLEEP::usleep(500);
     }
 
     if (_io_fd->bytesAvailable() < 1) {
@@ -388,7 +442,11 @@ PX4_Uploader::send(uint8_t c)
 {
     //log("send 0x%02x", c);
     if (_io_fd->write((char*)&c, 1) != 1)
+    {
 		return -errno;
+    } else {
+        _io_fd->flush();
+    }
 
 	return OK;
 }
