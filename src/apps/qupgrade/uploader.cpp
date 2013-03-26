@@ -49,6 +49,7 @@
 #include <sys/stat.h>
 
 #include "uploader.h"
+#include "qgc.h"
 
 #include <QtGlobal>
 #include <QFile>
@@ -58,7 +59,7 @@
 #define OK 0
 #define nullptr NULL
 
-static const uint32_t crctab[] =
+static const quint32 crctab[] =
 {
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
 	0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91,
@@ -94,7 +95,7 @@ static const uint32_t crctab[] =
 	0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-static uint32_t
+static quint32
 crc32(const uint8_t *src, unsigned len, unsigned state)
 {
 	for (unsigned i = 0; i < len; i++)
@@ -102,25 +103,101 @@ crc32(const uint8_t *src, unsigned len, unsigned state)
 	return state;
 }
 
-PX4_Uploader::PX4_Uploader()
+PX4_Uploader::PX4_Uploader(QextSerialPort* port) :
+    _io_fd(port)
 {
+    boardNames.append("Zero");
+    boardNames.append("One");
+    boardNames.append("Two");
+    boardNames.append("Three");
+    boardNames.append("Four");
+    boardNames.append("PX4FMU v1.x");
+    boardNames.append("Six");
+    boardNames.append("Seven");
+    boardNames.append("Eight");
+
+    // Create serial port instance
+
 }
 
 PX4_Uploader::~PX4_Uploader()
 {
 }
 
-bool
-PX4_Uploader::upload(const QString& filename, QextSerialPort* port)
+int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
 {
+    int ret = -1;
+
+    humanReadable = QString("INFO FAILED");
+
+    /* do the usual program thing - allow for failure */
+    for (unsigned retries = 0; retries < 1; retries++) {
+
+        if (retries > 0) {
+            log("retrying info...");
+            ret = sync();
+
+            if (ret != OK) {
+                /* this is immediately fatal */
+                log("bootloader not responding");
+                return -EIO;
+            }
+        }
+
+        ret = get_info(INFO_BL_REV, bl_rev);
+
+        if (ret == OK) {
+            log("found bootloader revision: %d", bl_rev);
+        } else {
+            log("failed getting bootloader rev.");
+        }
+
+        ret = get_info(INFO_BOARD_ID, board_id);
+
+        if (ret == OK) {
+            log("found board ID: %d", board_id);
+        } else {
+            log("failed getting board ID");
+        }
+
+        ret = get_info(INFO_BOARD_REV, board_rev);
+
+        if (ret == OK) {
+            log("board rev: %d", board_rev);
+        } else {
+            log("failed getting board rev.");
+        }
+
+        ret = get_info(INFO_FLASH_SIZE, flash_size);
+
+        if (ret == OK) {
+            log("flash size: %d bytes (%4.1f MiB)", flash_size, flash_size / (1024.0f * 1024.0f));
+        } else {
+            log("failed getting flash size");
+        }
+
+        insync = true;
+
+        humanReadable = QString("%1 rev %2 (%4.1f MiB flash)").arg(boardNames.at(board_id)).arg(board_rev).arg(flash_size / (1024.0f * 1024.0f));
+    }
+
+    return ret;
+}
+
+int
+PX4_Uploader::upload(const QString& filename, bool insync)
+{
+    // XXX hardcoded for FMU 1.x for testing
+    unsigned int checkBoardId = 5;
+    unsigned int checkBoardMinRev = 0;
+    unsigned int checkBoardMaxRev = 99;
+
 	int	ret;
 	size_t fw_size;
 
-    _io_fd = port;
-
     if (_io_fd->isOpen() || !_io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
 		log("could not open interface");
-        return false;
+        return -1;
 	}
 
 	/* look for the bootloader */
@@ -129,7 +206,7 @@ PX4_Uploader::upload(const QString& filename, QextSerialPort* port)
 	if (ret != OK) {
 		/* this is immediately fatal */
 		log("bootloader not responding");
-        return false;
+        return ret;
 	}
 
     _fw_fd.close();
@@ -152,28 +229,69 @@ PX4_Uploader::upload(const QString& filename, QextSerialPort* port)
 
 	/* do the usual program thing - allow for failure */
 	for (unsigned retries = 0; retries < 1; retries++) {
-		if (retries > 0) {
-			log("retrying update...");
-			ret = sync();
 
-			if (ret != OK) {
-				/* this is immediately fatal */
-				log("bootloader not responding");
-				return -EIO;
-			}
-		}
+        if (!insync) {
 
-		ret = get_info(INFO_BL_REV, bl_rev);
+            if (retries > 0) {
+                log("retrying update...");
+                ret = sync();
 
-		if (ret == OK) {
-			if (bl_rev <= BL_REV) {
-				log("found bootloader revision: %d", bl_rev);
-			} else {
-				log("found unsupported bootloader revision %d, exiting", bl_rev);
-				return OK;
-			}
-		}
+                if (ret != OK) {
+                    /* this is immediately fatal */
+                    log("bootloader not responding");
+                    return -EIO;
+                }
+            }
 
+            ret = get_info(INFO_BL_REV, bl_rev);
+
+            if (ret == OK) {
+                if (bl_rev <= BL_REV) {
+                    log("found bootloader revision: %d", bl_rev);
+                } else {
+                    log("found unsupported bootloader revision %d, exiting", bl_rev);
+                    return OK;
+                }
+            }
+
+            ret = get_info(INFO_BOARD_ID, board_id);
+
+            if (ret == OK) {
+                if (board_id == checkBoardId) {
+                    log("found board ID: %d", board_id);
+                } else {
+                    log("found unsupported board ID %d, exiting", board_id);
+                    return OK;
+                }
+            }
+
+            ret = get_info(INFO_BOARD_REV, board_rev);
+
+            if (ret == OK) {
+                // XXX check that flash size deducts the bootloader space
+                if (board_rev >= checkBoardMinRev && board_rev <= checkBoardMaxRev) {
+                    log("board rev: %d", board_rev);
+                } else {
+                    log("unsupported board rev (%d), exiting", board_rev);
+                    return OK;
+                }
+            }
+
+            ret = get_info(INFO_FLASH_SIZE, flash_size);
+
+            if (ret == OK) {
+                // XXX check that flash size deducts the bootloader space
+                if (flash_size > fw_size) {
+                    log("flash size: %d bytes (%4.1f MiB)", flash_size, flash_size / (1024.0f * 1024.0f));
+                } else {
+                    log("not enough flash size (%d bytes avail, %d needed), exiting", flash_size, fw_size);
+                    return OK;
+                }
+            }
+
+        }
+
+        // All checks passed, erase
 		ret = erase();
 
 		if (ret != OK) {
@@ -219,9 +337,13 @@ PX4_Uploader::upload(const QString& filename, QextSerialPort* port)
 int
 PX4_Uploader::recv(uint8_t &c, unsigned timeout)
 {
-    _io_fd->waitForReadyRead(timeout);
+    quint64 startTime = QGC::groundTimeMilliseconds();
 
-    if (_io_fd->bytesAvailable()) {
+    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
+        SLEEP::usleep(1000);
+    }
+
+    if (_io_fd->bytesAvailable() < 1) {
         log("poll timeout");
         return -ETIMEDOUT;
     } else {
@@ -229,7 +351,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
         c = arr.at(0);
     }
 
-    log("recv 0x%02x", c);
+    //log("recv 0x%02x", c);
 	return OK;
 }
 
@@ -264,7 +386,7 @@ PX4_Uploader::drain()
 int
 PX4_Uploader::send(uint8_t c)
 {
-    log("send 0x%02x", c);
+    //log("send 0x%02x", c);
     if (_io_fd->write((char*)&c, 1) != 1)
 		return -errno;
 
@@ -323,7 +445,7 @@ PX4_Uploader::sync()
 }
 
 int
-PX4_Uploader::get_info(int param, uint32_t &val)
+PX4_Uploader::get_info(int param, quint32 &val)
 {
 	int ret;
 
@@ -486,10 +608,10 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 	int ret;
 	uint8_t	file_buf[4];
 	ssize_t count;
-	uint32_t sum = 0;
-	uint32_t bytes_read = 0;
-	uint32_t crc = 0;
-	uint32_t fw_size_remote;
+    quint32 sum = 0;
+    quint32 bytes_read = 0;
+    quint32 crc = 0;
+    quint32 fw_size_remote;
 	uint8_t fill_blank = 0xff;
 
 	log("verify...");
@@ -573,7 +695,7 @@ PX4_Uploader::log(const char *fmt, ...)
 {
 	va_list	ap;
 
-	printf("[PX4IO] ");
+    printf("[PX4 Uploader] ");
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);

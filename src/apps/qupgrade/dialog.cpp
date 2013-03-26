@@ -5,7 +5,9 @@
 #include <QtCore>
 #include <QDebug>
 #include <QFileDialog>
+#include <QThread>
 
+#include "qgc.h"
 #include "uploader.h"
 
 Dialog::Dialog(QWidget *parent) :
@@ -20,31 +22,7 @@ Dialog::Dialog(QWidget *parent) :
     //make sure user can input their own port name!
     ui->portBox->setEditable(true);
 
-    ui->baudRateBox->addItem("1200", BAUD1200);
-    ui->baudRateBox->addItem("2400", BAUD2400);
-    ui->baudRateBox->addItem("4800", BAUD4800);
-    ui->baudRateBox->addItem("9600", BAUD9600);
-    ui->baudRateBox->addItem("19200", BAUD19200);
-    ui->baudRateBox->setCurrentIndex(3);
-
-    ui->parityBox->addItem("NONE", PAR_NONE);
-    ui->parityBox->addItem("ODD", PAR_ODD);
-    ui->parityBox->addItem("EVEN", PAR_EVEN);
-
-    ui->dataBitsBox->addItem("5", DATA_5);
-    ui->dataBitsBox->addItem("6", DATA_6);
-    ui->dataBitsBox->addItem("7", DATA_7);
-    ui->dataBitsBox->addItem("8", DATA_8);
-    ui->dataBitsBox->setCurrentIndex(3);
-
-    ui->stopBitsBox->addItem("1", STOP_1);
-    ui->stopBitsBox->addItem("2", STOP_2);
-
-    ui->queryModeBox->addItem("Polling", QextSerialPort::Polling);
-    ui->queryModeBox->addItem("EventDriven", QextSerialPort::EventDriven);
-    //! [0]
-
-    ui->led->turnOff();
+//    ui->led->turnOff();
 
     timer = new QTimer(this);
     timer->setInterval(40);
@@ -56,18 +34,10 @@ Dialog::Dialog(QWidget *parent) :
     enumerator = new QextSerialEnumerator(this);
     enumerator->setUpNotifications();
 
-    connect(ui->baudRateBox, SIGNAL(currentIndexChanged(int)), SLOT(onBaudRateChanged(int)));
-    connect(ui->parityBox, SIGNAL(currentIndexChanged(int)), SLOT(onParityChanged(int)));
-    connect(ui->dataBitsBox, SIGNAL(currentIndexChanged(int)), SLOT(onDataBitsChanged(int)));
-    connect(ui->stopBitsBox, SIGNAL(currentIndexChanged(int)), SLOT(onStopBitsChanged(int)));
-    connect(ui->queryModeBox, SIGNAL(currentIndexChanged(int)), SLOT(onQueryModeChanged(int)));
-    connect(ui->timeoutBox, SIGNAL(valueChanged(int)), SLOT(onTimeoutChanged(int)));
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
-    connect(ui->openCloseButton, SIGNAL(clicked()), SLOT(onOpenCloseButtonClicked()));
-    connect(ui->sendButton, SIGNAL(clicked()), SLOT(onSendButtonClicked()));
     connect(ui->uploadButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
-    connect(timer, SIGNAL(timeout()), SLOT(onReadyRead()));
-    connect(port, SIGNAL(readyRead()), SLOT(onReadyRead()));
+    //connect(timer, SIGNAL(timeout()), SLOT(onReadyRead()));
+    //connect(port, SIGNAL(readyRead()), SLOT(onReadyRead()));
 
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
@@ -97,66 +67,8 @@ void Dialog::onPortNameChanged(const QString & /*name*/)
 {
     if (port->isOpen()) {
         port->close();
-        ui->led->turnOff();
+//        ui->led->turnOff();
     }
-}
-//! [2]
-void Dialog::onBaudRateChanged(int idx)
-{
-    port->setBaudRate((BaudRateType)ui->baudRateBox->itemData(idx).toInt());
-}
-
-void Dialog::onParityChanged(int idx)
-{
-    port->setParity((ParityType)ui->parityBox->itemData(idx).toInt());
-}
-
-void Dialog::onDataBitsChanged(int idx)
-{
-    port->setDataBits((DataBitsType)ui->dataBitsBox->itemData(idx).toInt());
-}
-
-void Dialog::onStopBitsChanged(int idx)
-{
-    port->setStopBits((StopBitsType)ui->stopBitsBox->itemData(idx).toInt());
-}
-
-void Dialog::onQueryModeChanged(int idx)
-{
-    port->setQueryMode((QextSerialPort::QueryMode)ui->queryModeBox->itemData(idx).toInt());
-}
-
-void Dialog::onTimeoutChanged(int val)
-{
-    port->setTimeout(val);
-}
-//! [2]
-//! [3]
-void Dialog::onOpenCloseButtonClicked()
-{
-    if (!port->isOpen()) {
-        port->setPortName(ui->portBox->currentText());
-        port->open(QIODevice::ReadWrite);
-    }
-    else {
-        port->close();
-    }
-
-    //If using polling mode, we need a QTimer
-    if (port->isOpen() && port->queryMode() == QextSerialPort::Polling)
-        timer->start();
-    else
-        timer->stop();
-
-    //update led's status
-    ui->led->turnOn(port->isOpen());
-}
-//! [3]
-//! [4]
-void Dialog::onSendButtonClicked()
-{
-    if (port->isOpen() && !ui->sendEdit->toPlainText().isEmpty())
-        port->write(ui->sendEdit->toPlainText().toLatin1());
 }
 
 void Dialog::onUploadButtonClicked()
@@ -170,11 +82,28 @@ void Dialog::onUploadButtonClicked()
 
         port->close();
 
+        PX4_Uploader uploader(port);
+
+
+        // XXX revisit
+        port->setTimeout(0);
+        port->setQueryMode(QextSerialPort::Polling);
+
+        int i = 0;
+
+        while (i < 100) {
+            i++;
+
+
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
         //! [1]
         qDebug() << "List of ports:";
         //! [2]
         foreach (QextPortInfo info, ports) {
+
+            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+                continue;
+
             qDebug() << "port name:"       << info.portName;
             qDebug() << "friendly name:"   << info.friendName;
             qDebug() << "physical name:"   << info.physName;
@@ -184,11 +113,13 @@ void Dialog::onUploadButtonClicked()
 
             qDebug() << "===================================";
 
+            QString openString = info.portName;
+
             qDebug() << "UPLOAD ATTEMPT";
 
             // Spawn upload thread
-            PX4_Uploader uploader;
-            port->setPortName(info.portName);
+
+            port->setPortName(openString);
 
             if (fileName.endsWith(".px4")) {
                 qDebug() << "PX4 files not yet supported";
@@ -196,8 +127,26 @@ void Dialog::onUploadButtonClicked()
             } else if (fileName.endsWith(".bin")) {
                 // Die-hard flash the binary
                 qDebug() << "ATTEMPTING TO FLASH" << fileName << "ON PORT" << port->portName();
-                uploader.upload(fileName, port);
+
+                quint32 board_id;
+                quint32 board_rev;
+                quint32 flash_size;
+                bool insync = false;
+                QString humanReadable;
+                //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
+
+                int ret = uploader.upload(fileName, insync);
+
+                port->close();
+
+                // bail out on success
+                if (ret == 0)
+                    return;
             }
+        }
+
+        usleep(100000);
+
         }
 
     }

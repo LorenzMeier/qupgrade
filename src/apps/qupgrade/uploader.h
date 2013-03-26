@@ -47,10 +47,11 @@
 class PX4_Uploader
 {
 public:
-    PX4_Uploader();
+    PX4_Uploader(QextSerialPort* port);
     virtual ~PX4_Uploader();
 
-    bool upload(const QString& filename, QextSerialPort* port);
+    int upload(const QString& filename, bool insync=false);
+    int get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync);
 
 private:
 	enum {
@@ -82,8 +83,12 @@ private:
 
     QextSerialPort*		_io_fd;
     QFile		_fw_fd;
+    QList<QString> boardNames;
 
-	uint32_t	bl_rev; /**< bootloader revision */
+    uint32_t	bl_rev;         ///< bootloader revision
+    uint32_t    board_id;       ///< board ID
+    uint32_t    board_rev;      ///< board revision
+    uint32_t    flash_size;     ///< flash size
 
 	void			log(const char *fmt, ...);
 
