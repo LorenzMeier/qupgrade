@@ -97,9 +97,6 @@ void Dialog::onUploadButtonClicked()
         //! [2]
         foreach (QextPortInfo info, ports) {
 
-            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
-                continue;
-
             qDebug() << "port name:"       << info.portName;
             qDebug() << "friendly name:"   << info.friendName;
             qDebug() << "physical name:"   << info.physName;
@@ -108,6 +105,9 @@ void Dialog::onUploadButtonClicked()
             qDebug() << "product ID:"      << info.productID;
 
             qDebug() << "===================================";
+
+            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+                continue;
 
             QString openString = info.portName;
 
