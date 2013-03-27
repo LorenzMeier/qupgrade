@@ -116,24 +116,45 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
     // get the non standard serial ports names
     // (USB-serial, bluetooth-serial, 18F PICs, and so on)
     // if you know an other name prefix for serial ports please let us know
-    portNamePrefixes.clear();
-    portNamePrefixes << QLatin1String("rfcomm*");
-    portNamePrefixes << QLatin1String("serial/by-id/usb-*");
-    portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
+    //    portNamePrefixes.clear();
+    //    portNamePrefixes << QLatin1String("rfcomm*");
+    //    portNamePrefixes << QLatin1String("serial/by-id/usb-*");
+    //    portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
 
-    foreach (QString str , portNameList) {
-        QextPortInfo inf;
-        inf.physName = QLatin1String("/dev/")+str;
-        inf.portName = str;
+    //    foreach (QString str , portNameList) {
+    //        QextPortInfo inf;
+    //        inf.physName = QLatin1String("/dev/")+str;
+    //        inf.portName = str;
 
-        if (str.contains(QLatin1String("rfcomm"))) {
-            inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
+    //        if (str.contains(QLatin1String("rfcomm"))) {
+    //            inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
+    //        }
+    //        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
+    //            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
+    //        }
+    //        inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
+    //        infoList.append(inf);
+    //    }
+
+    QString devdir = "/dev/serial/by-id/";
+    QDir dir(devdir);
+    dir.setFilter(QDir::System);
+
+    QFileInfoList list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo fileInfo = list.at(i);
+        if (fileInfo.fileName().contains(QString("usb-")))
+        {
+            QString str = fileInfo.canonicalFilePath();
+            QextPortInfo inf;
+            inf.physName = QLatin1String(str);
+            inf.portName = QLatin1String(str);
+            QStringList split = str.split("by-id/");
+            inf.friendName = QLatin1String("USB-serial adapter ")+QLatin1String(split.last());
+            inf.enumName = QLatin1String(split.last()); // is there a more helpful name for this?
+            infoList.append(inf);
+            qDebug() << __FILE__ << __LINE__ << "Found: " << str;
         }
-        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
-            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
-        }
-        inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
-        infoList.append(inf);
     }
 
 
