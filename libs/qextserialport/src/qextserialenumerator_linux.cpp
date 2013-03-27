@@ -136,6 +136,7 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
     // if you know an other name prefix for serial ports please let us know
     portNamePrefixes.clear();
     portNamePrefixes << QLatin1String("ttyACM*") << QLatin1String("ttyUSB*") << QLatin1String("rfcomm*");
+    portNamePrefixes << QLatin1String("serial/by-id/usb-*")
     portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
 
     foreach (QString str , portNameList) {
@@ -151,6 +152,9 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
         }
         else if (str.contains(QLatin1String("rfcomm"))) {
             inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
+        }
+        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
+            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
         }
         inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
         infoList.append(inf);
