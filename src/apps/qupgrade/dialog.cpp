@@ -137,7 +137,7 @@ void Dialog::onUploadButtonClicked()
                 return;
         }
 
-        usleep(100000);
+        SLEEP::usleep(100000);
 
         }
 
