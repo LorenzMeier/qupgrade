@@ -112,6 +112,31 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
     // Done with the list and this udev
     udev_enumerate_unref(enumerate);
     udev_unref(ud);
+
+    // get the non standard serial ports names
+    // (USB-serial, bluetooth-serial, 18F PICs, and so on)
+    // if you know an other name prefix for serial ports please let us know
+    portNamePrefixes.clear();
+    portNamePrefixes << QLatin1String("rfcomm*");
+    portNamePrefixes << QLatin1String("serial/by-id/usb-*");
+    portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
+
+    foreach (QString str , portNameList) {
+        QextPortInfo inf;
+        inf.physName = QLatin1String("/dev/")+str;
+        inf.portName = str;
+
+        if (str.contains(QLatin1String("rfcomm"))) {
+            inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
+        }
+        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
+            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
+        }
+        inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
+        infoList.append(inf);
+    }
+
+
 #else
     QStringList portNamePrefixes, portNameList;
     portNamePrefixes << QLatin1String("ttyS*"); // list normal serial ports first
