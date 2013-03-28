@@ -136,24 +136,16 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
     //        infoList.append(inf);
     //    }
 
-    QString devdir = "/dev/serial/by-id/";
-    QDir dir(devdir);
-    dir.setFilter(QDir::System);
-
-    QFileInfoList list = dir.entryInfoList();
-    for (int i = 0; i < list.size(); ++i) {
-        QFileInfo fileInfo = list.at(i);
-        if (fileInfo.fileName().contains(QString("usb-")))
+    QList<QextPortInfo>::iterator it = infoList.begin();
+    while (it != infoList.end()) {
+        if (it->portName.contains(QString("ttyACM")))
         {
-            QString str = fileInfo.canonicalFilePath();
-            QextPortInfo inf;
-            inf.physName = QLatin1String(str);
-            inf.portName = QLatin1String(str);
-            QStringList split = str.split("by-id/");
-            inf.friendName = QLatin1String("USB-serial adapter ")+QLatin1String(split.last());
-            inf.enumName = QLatin1String(split.last()); // is there a more helpful name for this?
-            infoList.append(inf);
-            qDebug() << __FILE__ << __LINE__ << "Found: " << str;
+            qDebug() << __FILE__ << __LINE__ << "Found: " << it->portName;
+            ++it;
+        }
+        else
+        {
+            it = infoList.erase(it);
         }
     }
 
