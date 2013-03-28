@@ -107,7 +107,7 @@ crc32(const uint8_t *src, unsigned len, unsigned state)
 	return state;
 }
 
-PX4_Uploader::PX4_Uploader(QextSerialPort* port) :
+PX4_Uploader::PX4_Uploader(QextSerialPort* port, QObject *parent) : QObject(parent),
     _io_fd(port)
 {
     boardNames.append("Zero");
@@ -345,7 +345,9 @@ PX4_Uploader::upload(const QString& filename, bool insync)
 		if (ret != OK) {
 			log("erase failed");
 			continue;
-		}
+        } else {
+            emit upgradeProgressChanged(10);
+        }
 
 		ret = program(fw_size);
 
@@ -584,6 +586,9 @@ PX4_Uploader::program(size_t fw_size)
 
 		if (ret != OK)
 			return ret;
+
+        // Emit update
+        emit upgradeProgressChanged(10 + (fw_size*100) / sent);
 	}
 	return OK;
 }

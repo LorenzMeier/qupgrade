@@ -15,16 +15,23 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="3,1">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="3,0">
      <item>
-      <widget class="QPlainTextEdit" name="recvEdit">
+      <widget class="QPlainTextEdit" name="upgradeLog">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
        <property name="maximumBlockCount">
         <number>800</number>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPlainTextEdit" name="sendEdit"/>
+      <widget class="QProgressBar" name="upgradeProgressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -66,7 +73,7 @@
      <item>
       <widget class="QPushButton" name="uploadButton">
        <property name="text">
-        <string>Upload</string>
+        <string>Select File and Upload</string>
        </property>
       </widget>
      </item>

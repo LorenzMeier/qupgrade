@@ -42,16 +42,21 @@
 #include <stdbool.h>
 #include <qextserialport.h>
 
+#include <QObject>
 #include <QFile>
 
-class PX4_Uploader
+class PX4_Uploader : public QObject
 {
+    Q_OBJECT
 public:
-    PX4_Uploader(QextSerialPort* port);
+    PX4_Uploader(QextSerialPort* port, QObject *parent=NULL);
     virtual ~PX4_Uploader();
 
     int upload(const QString& filename, bool insync=false);
     int get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync);
+
+signals:
+     void upgradeProgressChanged(int percent);
 
 private:
 	enum {

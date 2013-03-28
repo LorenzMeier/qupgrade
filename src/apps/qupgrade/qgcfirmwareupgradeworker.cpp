@@ -1,39 +1,67 @@
 //#include <QJsonDocument>
 #include <QFile>
 
-#include "QGCFirmwareUpgradeWorker.h"
+#include "qgcfirmwareupgradeworker.h"
 
-#include <SerialLink.h>
 #include <QGC.h>
 #include "uploader.h"
+#include "qextserialenumerator.h"
 
 #include <QDebug>
 
-#define PROTO_GET_SYNC		0x21
-#define PROTO_EOC            0x20
-#define PROTO_NOP		0x00
-#define PROTO_OK		0x10
-#define PROTO_FAILED		0x11
-#define PROTO_INSYNC		0x12
-
 QGCFirmwareUpgradeWorker::QGCFirmwareUpgradeWorker(QObject *parent) :
     QObject(parent),
-    link(NULL)
+    _abortUpload(false),
+    port(NULL)
 {
 }
 
-QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(QObject *parent)
+QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QString &filename)
 {
-    QGCFirmwareUpgradeWorker *worker = new QGCFirmwareUpgradeWorker;
-    QThread *workerThread = new QThread(parent);
+    QGCFirmwareUpgradeWorker *worker = NULL;
+    QThread *thread = NULL;
 
-    connect(workerThread, SIGNAL(started()), worker, SLOT(startContinousScan()));
-    connect(workerThread, SIGNAL(finished()), worker, SLOT(deleteLater()));
-    worker->moveToThread(workerThread);
+    worker = new QGCFirmwareUpgradeWorker;
+    worker->setFilename(filename);
+    thread = new QThread;
+
+    worker->moveToThread(thread);
+    //connect(worker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+    connect(thread, SIGNAL(started()), worker, SLOT(loadFirmware()));
+    connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+    connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    thread->start();
 
     // Starts an event loop, and emits workerThread->started()
-    workerThread->start();
+    thread->start();
     return worker;
+
+
+
+
+//    static QGCFirmwareUpgradeWorker *worker = NULL;
+//    static QThread *workerThread = NULL;
+    
+//    if (!worker) {
+//        worker = new QGCFirmwareUpgradeWorker;
+//        workerThread = new QThread(parent);
+//    } else {
+//        // Already instantiated and running, return running thread
+//        return worker;
+//    }
+
+//    worker->moveToThread(workerThread);
+//    connect(worker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+//    connect(thread, SIGNAL(started()), worker, SLOT(process()));
+//    connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+//    connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+//    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+//    thread->start();
+
+//    // Starts an event loop, and emits workerThread->started()
+//    thread->start();
+//    return worker;
 }
 
 
@@ -41,114 +69,109 @@ void QGCFirmwareUpgradeWorker::startContinousScan()
 {
     exitThread = false;
     while (!exitThread) {
-//        if (detect()) {
-//            break;
-//        }
-        QGC::SLEEP::msleep(20);
+        //        if (detect()) {
+        //            break;
+        //        }
+        SLEEP::msleep(100);
     }
 
     if (exitThread) {
-        link->disconnect();
-        delete link;
+        port->close();
+        delete port;
         exit(0);
     }
 }
 
 void QGCFirmwareUpgradeWorker::detect()
 {
-    if (!link)
-    {
-        link = new SerialLink("", 921600);
-        connect(link, SIGNAL(bytesReceived(LinkInterface*,QByteArray)), this, SLOT(receiveBytes(LinkInterface*,QByteArray)));
-    }
-
-    // Get a list of ports
-    QVector<QString>* ports = link->getCurrentPorts();
-
-    // Scan
-    for (int i = 0; i < ports->size(); i++)
-    {
-        // Ignore known wrong link names
-
-        if (ports->at(i).contains("Bluetooth")) {
-            //continue;
-        }
-
-        link->setPortName(ports->at(i));
-        // Open port and talk to it
-        link->connect();
-        char buf[2] = { PROTO_GET_SYNC, PROTO_EOC };
-        if (!link->isConnected()) {
-            continue;
-        }
-        // Send sync request
-        insync = false;
-        link->writeBytes(buf, 2);
-        // Wait for response
-        QGC::SLEEP::msleep(20);
-
-        if (insync)
-            emit validPortFound(ports->at(i));
-            break;
-    }
-
-    //ui.portName->setCurrentIndex(ui.baudRate->findText(QString("%1").arg(this->link->getPortName())));
-
-    // Set port
-
-    // Load current link config
+    
 
 }
 
-void QGCFirmwareUpgradeWorker::receiveBytes(LinkInterface* link, QByteArray b)
+void QGCFirmwareUpgradeWorker::setFilename(const QString &filename)
 {
-    for (int position = 0; position < b.size(); position++) {
-        qDebug() << "BYTES";
-        qDebug() << (char)(b[position]);
-        if (((const char)b[position]) == PROTO_INSYNC)
-        {
-            qDebug() << "SYNC";
-            insync = true;
-        }
-
-        if (insync && ((const char)b[position]) == PROTO_OK)
-        {
-            emit detectionStatusChanged("Found PX4 board");
-        }
-    }
-
-    printf("\n");
+    this->filename = filename;
 }
 
-void QGCFirmwareUpgradeWorker::loadFirmware(const QString &filename)
+void QGCFirmwareUpgradeWorker::loadFirmware()
 {
     qDebug() << __FILE__ << __LINE__ << "LOADING FW" << filename;
 
-    PX4_Uploader uploader;
-    const char* filenames[2];
-    filenames[0] = filename.toStdString().c_str();
-    filenames[1] = NULL;
-    uploader.upload(filenames, "/dev/tty.usbmodem1");
+    emit upgradeStatusChanged(tr("Attempting to upload file:\n%1").arg(filename));
 
-//    QFile f(filename);
-//    if (f.open(QIODevice::ReadOnly))
-//    {
-//        QByteArray buf = f.readAll();
-//        f.close();
-//        firmware = QJsonDocument::fromBinaryData(buf);
-//        if (firmware.isNull()) {
-//            emit upgradeStatusChanged(tr("Failed decoding file %1").arg(filename));
-//        } else {
-//            emit upgradeStatusChanged(tr("Ready to flash %1").arg(filename));
-//        }
-//    } else {
-//        emit upgradeStatusChanged(tr("Failed opening file %1").arg(filename));
-//    }
+    while (!_abortUpload) {
+
+        SLEEP::usleep(100000);
+
+        QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
+        //! [1]
+        qDebug() << "List of ports:";
+        //! [2]
+        foreach (QextPortInfo info, ports) {
+
+            qDebug() << "port name:"       << info.portName;
+            qDebug() << "friendly name:"   << info.friendName;
+            qDebug() << "physical name:"   << info.physName;
+            qDebug() << "enumerator name:" << info.enumName;
+            qDebug() << "vendor ID:"       << info.vendorID;
+            qDebug() << "product ID:"      << info.productID;
+
+            qDebug() << "===================================";
+
+            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+                continue;
+
+            QString openString = info.portName;
+
+            qDebug() << "UPLOAD ATTEMPT";
+
+            // Spawn upload thread
+
+            if (port == NULL) {
+                PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
+
+                port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
+                port->setTimeout(0);
+                port->setQueryMode(QextSerialPort::Polling);
+            } else {
+                port->close();
+                port->setPortName(openString);
+            }
+
+            PX4_Uploader uploader(port);
+            connect(&uploader, SIGNAL(upgradeProgressChanged(int percent)), this, SIGNAL(upgradeProgressChanged(int)));
+
+            // Die-hard flash the binary
+            emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+
+            //            quint32 board_id;
+            //            quint32 board_rev;
+            //            quint32 flash_size;
+            //            bool insync = false;
+            //            QString humanReadable;
+            //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
+
+            int ret = uploader.upload(filename);
+            return;
+
+            port->close();
+
+            // bail out on success
+            if (ret == 0) {
+                emit loadFinished(true);
+                return;
+            }
+        }
+    }
+
+    _abortUpload = false;
+    emit loadFinished(false);
+
 }
 
-void QGCFirmwareUpgradeWorker::upgrade()
+void QGCFirmwareUpgradeWorker::abortUpload()
 {
-    emit upgradeStatusChanged(tr("Starting firmware upgrade.."));
+    _abortUpload = true;
 }
 
 void QGCFirmwareUpgradeWorker::abort()

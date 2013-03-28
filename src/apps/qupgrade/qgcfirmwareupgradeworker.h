@@ -2,21 +2,21 @@
 #define QGCFirmwareUpgradeWorker_H
 
 #include <QObject>
-
-#include <SerialLink.h>
+#include <qextserialport.h>
 
 class QGCFirmwareUpgradeWorker : public QObject
 {
     Q_OBJECT
 public:
     explicit QGCFirmwareUpgradeWorker(QObject *parent = 0);
-    static QGCFirmwareUpgradeWorker* putWorkerInThread(QObject *parent);
+    static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename);
 
 signals:
     void detectionStatusChanged(const QString& status);
     void upgradeStatusChanged(const QString& status);
     void upgradeProgressChanged(int percent);
     void validPortFound(const QString& portName);
+    void loadFinished(bool success);
     
 public slots:
 
@@ -37,23 +37,22 @@ public slots:
     void detect();
 
     /**
-     * @brief Upgrade the firmware using the currently connected link
-     * @param filename file name / path of the firmware file
+     * @brief Aborts a currently running upload
      */
-    void upgrade();
+    void abortUpload();
 
     /**
-     * @brief Load firmware from disk into memory
+     * @brief Set firmware filename
      * @param filename
      */
-    void loadFirmware(const QString &filename);
+    void setFilename(const QString &filename);
 
     /**
-     * @brief Receive bytes from a link
-     * @param link
-     * @param b
+     * @brief Load firmware to board
      */
-    void receiveBytes(LinkInterface* link, QByteArray b);
+    void loadFirmware();
+
+
 
     /**
      * @brief Abort upgrade worker
@@ -64,9 +63,9 @@ protected:
     bool exitThread;
 
 private:
-    SerialLink *link;
-    bool insync;
-    //QJsonDocument firmware;
+    bool _abortUpload;
+    QextSerialPort *port;
+    QString filename;
 };
 
-#endif // QGCFirmwareUpgradeWorker_H
+#endif // QGCFIRMWAREUPGRADEWORKER_H

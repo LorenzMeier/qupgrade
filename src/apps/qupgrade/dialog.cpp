@@ -8,10 +8,11 @@
 #include <QThread>
 
 #include "qgc.h"
-#include "uploader.h"
+#include "qgcfirmwareupgradeworker.h"
 
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
+    loading(false),
     ui(new Ui::Dialog)
 {
     ui->setupUi(this);
@@ -69,86 +70,29 @@ void Dialog::onPortNameChanged(const QString & /*name*/)
 
 void Dialog::onUploadButtonClicked()
 {
+    if (loading) {
+        worker->abortUpload();
+        loading = false;
+        ui->uploadButton->setText(tr("Select File and Upload"));
+    } else {
 
-    // Pick file
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open Firmware File"), "/home/", tr("Firmware Files (*.px4 *.bin)"));
+        // Pick file
+        QString fileName = QFileDialog::getOpenFileName(this,
+                tr("Open Firmware File"), "/home/", tr("Firmware Files (*.px4 *.bin)"));
 
-    if (fileName.length() > 0) {
+        if (fileName.length() > 0) {
+            // Got a filename, upload
+            loading = true;
+            ui->uploadButton->setText(tr("Cancel upload"));
 
-        port->close();
-
-        PX4_Uploader uploader(port);
-
-
-        // XXX revisit
-        port->setTimeout(0);
-        port->setQueryMode(QextSerialPort::Polling);
-
-        int i = 0;
-
-        while (i < 100) {
-            i++;
-
-
-        QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
-        //! [1]
-        qDebug() << "List of ports:";
-        //! [2]
-        foreach (QextPortInfo info, ports) {
-
-            qDebug() << "port name:"       << info.portName;
-            qDebug() << "friendly name:"   << info.friendName;
-            qDebug() << "physical name:"   << info.physName;
-            qDebug() << "enumerator name:" << info.enumName;
-            qDebug() << "vendor ID:"       << info.vendorID;
-            qDebug() << "product ID:"      << info.productID;
-
-            qDebug() << "===================================";
-
-            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
-                continue;
-
-            QString openString = info.portName;
-
-            qDebug() << "UPLOAD ATTEMPT";
-
-            // Spawn upload thread
-
-            port->setPortName(openString);
-
-            // Die-hard flash the binary
-            qDebug() << "ATTEMPTING TO FLASH" << fileName << "ON PORT" << port->portName();
-
-//            quint32 board_id;
-//            quint32 board_rev;
-//            quint32 flash_size;
-//            bool insync = false;
-//            QString humanReadable;
-            //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
-
-            int ret = uploader.upload(fileName);
-            return;
-
-            port->close();
-
-            // bail out on success
-            if (ret == 0)
-                return;
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
+            // Hook up status from worker to progress bar
+            connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
+            // Hook up text from worker to label
+            connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
+            // Hook up status from worker to this class
+            connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         }
-
-        SLEEP::usleep(100000);
-
-        }
-
-    }
-}
-
-void Dialog::onReadyRead()
-{
-    if (port->bytesAvailable()) {
-        ui->recvEdit->moveCursor(QTextCursor::End);
-        ui->recvEdit->insertPlainText(QString::fromLatin1(port->readAll()));
     }
 }
 
@@ -166,4 +110,8 @@ void Dialog::onPortAddedOrRemoved()
     ui->portBox->blockSignals(false);
 }
 
-//! [4]
+void Dialog::onLoadFinished(bool success)
+{
+    loading = false;
+    ui->uploadButton->setText(tr("Select File and Upload"));
+}

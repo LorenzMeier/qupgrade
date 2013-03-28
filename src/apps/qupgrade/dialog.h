@@ -9,6 +9,7 @@ namespace Ui {
 class QTimer;
 class QextSerialPort;
 class QextSerialEnumerator;
+class QGCFirmwareUpgradeWorker;
 
 class Dialog : public QDialog
 {
@@ -18,21 +19,27 @@ public:
     explicit Dialog(QWidget *parent = 0);
     ~Dialog();
 
+signals:
+    void filenameSet(QString filename);
+
 protected:
     void changeEvent(QEvent *e);
+
+public slots:
+    void onPortAddedOrRemoved();
+    void onLoadFinished(bool success);
 
 private slots:
     void onPortNameChanged(const QString &name);
     void onUploadButtonClicked();
-    void onReadyRead();
-
-    void onPortAddedOrRemoved();
 
 private:
+    bool loading;
     Ui::Dialog *ui;
     QTimer *timer;
     QextSerialPort *port;
     QextSerialEnumerator *enumerator;
+    QGCFirmwareUpgradeWorker *worker;
 };
 
 #endif // DIALOG_H
