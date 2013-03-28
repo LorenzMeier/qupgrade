@@ -336,6 +336,9 @@ PX4_Uploader::upload(const QString& filename, bool insync)
 
         }
 
+        /* let's measure how long it takes */\
+        quint64 startUploadTime = QGC::groundTimeMilliseconds();
+
         // All checks passed, erase
 		ret = erase();
 
@@ -368,8 +371,8 @@ PX4_Uploader::upload(const QString& filename, bool insync)
 			log("reboot failed");
 			return ret;
 		}
-
-		log("update complete");
+		
+        log("update complete (time: %f s)", 1e-3f*(float)(QGC::groundTimeMilliseconds() - startUploadTime));
 
 		ret = OK;
 		break;
@@ -453,12 +456,13 @@ PX4_Uploader::send(uint8_t c)
 int
 PX4_Uploader::send(uint8_t *p, unsigned count)
 {
-	while (count--) {
-		int ret = send(*p++);
-
-		if (ret != OK)
-			return ret;
-	}
+    if (_io_fd->write((const char*)p, count) != count)
+    {
+        return -errno;
+    } else {
+//        log("sent %d bytes", count);
+        _io_fd->flush();
+    }
 
 	return OK;
 }
