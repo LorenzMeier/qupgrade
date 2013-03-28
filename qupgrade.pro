@@ -9,6 +9,8 @@ QT       += core gui widgets
 TARGET = qupgrade
 TEMPLATE = app
 
+linux*:CONFIG += qesp_linux_udev
+
 include(libs/qextserialport/src/qextserialport.pri)
 
 SOURCES += src/apps/qupgrade/main.cpp\
