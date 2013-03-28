@@ -76,7 +76,7 @@ private:
 		INFO_BOARD_REV		= 3,		/**< board revision */
 		INFO_FLASH_SIZE		= 4,		/**< max firmware size in bytes */
 
-		PROG_MULTI_MAX		= 60,		/**< protocol max is 255, must be multiple of 4 */
+        PROG_MULTI_MAX		= 128,		/**< protocol max is 255, must be multiple of 4 */
         READ_MULTI_MAX		= 60		/**< protocol max is 255, something overflows with >= 64 */
 
 	};
