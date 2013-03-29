@@ -37,15 +37,18 @@
 
 #include <sys/types.h>
 #include <stdint.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#ifdef Q_OS_WIN
+#include <io.h>
+#endif
 
 #include "uploader.h"
 #include "qgc.h"
@@ -543,7 +546,7 @@ int
 PX4_Uploader::program(size_t fw_size)
 {
 	uint8_t	file_buf[PROG_MULTI_MAX];
-	ssize_t count;
+    int count;
 	int ret;
 	size_t sent = 0;
 
@@ -559,7 +562,7 @@ PX4_Uploader::program(size_t fw_size)
 		}
         count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+        if (count != (int)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)sent,
@@ -587,8 +590,16 @@ PX4_Uploader::program(size_t fw_size)
 		if (ret != OK)
 			return ret;
 
-        // Emit update
-        emit upgradeProgressChanged(10 + (fw_size*100) / sent);
+        /* Emit progress bar update */
+        if (bl_rev == 2) {
+            /* expect slower verify for bootloader rev 2 */
+            emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*45.0f));
+        } else if (bl_rev == 3) {
+            /* expect fast verify for bootloader rev 3 */
+            emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*80.0f));
+        } else {
+            log("progress bar update for this bootloader revision not supported");
+        }
 	}
 	return OK;
 }
@@ -597,7 +608,7 @@ int
 PX4_Uploader::verify_rev2(size_t fw_size)
 {
 	uint8_t	file_buf[4];
-	ssize_t count;
+    int count;
 	int ret;
 	size_t sent = 0;
 
@@ -619,7 +630,7 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 		}
 		count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+        if (count != (int)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)sent,
@@ -641,7 +652,7 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 		send(count);
 		send(PROTO_EOC);
 
-		for (ssize_t i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
 			uint8_t c;
 
 			ret = recv(c, 5000);
@@ -659,11 +670,16 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 
 		ret = get_sync();
 
+        /* verify with bootloader rev 2 55%...100% */
+        emit upgradeProgressChanged(55 + (int)(((float)sent/(float)fw_size)*45.0f));
+
 		if (ret != OK) {
 			log("timeout waiting for post-verify sync");
 			return ret;
 		}
 	}
+
+    emit upgradeProgressChanged(100);
 
 	return OK;
 }
@@ -673,7 +689,7 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 {
 	int ret;
 	uint8_t	file_buf[4];
-	ssize_t count;
+    int count;
     quint32 sum = 0;
     quint32 bytes_read = 0;
     quint32 crc = 0;
@@ -699,7 +715,7 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 		}
 		count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+        if (count != (int)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)bytes_read,
@@ -743,6 +759,8 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 		log("CRC wrong: received: %d, expected: %d", crc, sum);
 		return -EINVAL;
 	}
+
+    emit upgradeProgressChanged(100);
 
 	return OK;
 }
