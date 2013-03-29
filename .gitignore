@@ -6,3 +6,15 @@
 *.prf
 *.prf.in
 src/apps/qupgrade_old
+Makefile
+*.exe
+*.ipch
+*.sln
+*.sdf
+*.opensdf
+*.suo
+*.pdb
+*.vcxproj*
+release
+debug
+ui_dialog.h
