@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QThread>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 #include "qgc.h"
 #include "qgcfirmwareupgradeworker.h"
@@ -36,10 +38,20 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
     connect(ui->uploadButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
 
+    connect(ui->webView->page(), SIGNAL(downloadRequested(const QNetworkRequest&)), this, SLOT(onDownloadRequested(const QNetworkRequest&)));
+
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
 
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
+
+    // Load start file into web view
+    // for some reason QWebView has substantiall issues with local files.
+    // Trick it by providing HTML directly.
+    QFile html(QCoreApplication::applicationDirPath()+"/files/index.html");
+    html.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString str = html.readAll();
+    ui->webView->setHtml(str);
 }
 
 Dialog::~Dialog()
@@ -58,6 +70,24 @@ void Dialog::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void Dialog::onDownloadRequested(const QNetworkRequest &request)
+{
+    qDebug() << "Download Request";
+    QString defaultFileName = QFileInfo(request.url().toString()).fileName();
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), defaultFileName);
+    if (fileName.isEmpty()) return;
+
+    QNetworkRequest newRequest = request;
+    newRequest.setAttribute(QNetworkRequest::User, fileName);
+
+    ui->upgradeLog->appendHtml(tr("Downloading firmware file <a href=\"%1\">%1</a>").arg(request.url().toString()));
+
+    QNetworkAccessManager *networkManager = ui->webView->page()->networkAccessManager();
+    QNetworkReply *reply = networkManager->get(newRequest);
+    connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
+    //connect( reply, SIGNAL(finished()), this, SLOT(downloadIssueFinished()));
 }
 
 void Dialog::onPortNameChanged(const QString & /*name*/)
@@ -84,7 +114,7 @@ void Dialog::onUploadButtonClicked()
             // Got a filename, upload
             loading = true;
             ui->uploadButton->setText(tr("Cancel upload"));
-            lastFilename = filename;
+            lastFilename = fileName;
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
             // Hook up status from worker to progress bar
@@ -117,4 +147,9 @@ void Dialog::onLoadFinished(bool success)
 {
     loading = false;
     ui->uploadButton->setText(tr("Select File and Upload"));
+}
+
+void Dialog::onDownloadProgress(qint64 curr, qint64 total)
+{
+    ui->upgradeProgressBar->setValue((curr*100) / total);
 }

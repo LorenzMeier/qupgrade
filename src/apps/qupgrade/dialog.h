@@ -10,6 +10,7 @@ class QTimer;
 class QextSerialPort;
 class QextSerialEnumerator;
 class QGCFirmwareUpgradeWorker;
+class QNetworkRequest;
 
 class Dialog : public QDialog
 {
@@ -28,10 +29,12 @@ protected:
 public slots:
     void onPortAddedOrRemoved();
     void onLoadFinished(bool success);
+    void onDownloadProgress(qint64 curr, qint64 total);
 
 private slots:
     void onPortNameChanged(const QString &name);
     void onUploadButtonClicked();
+    void onDownloadRequested(const QNetworkRequest &request);
 
 private:
     bool loading;

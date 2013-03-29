@@ -15,7 +15,16 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="3,0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,3,0">
+     <item>
+      <widget class="QWebView" name="webView">
+       <property name="url">
+        <url>
+         <string>http://qt-project.org/</string>
+        </url>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPlainTextEdit" name="upgradeLog">
        <property name="readOnly">
@@ -50,12 +59,46 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QComboBox" name="portBox"/>
+        <widget class="QComboBox" name="portBox">
+         <item>
+          <property name="text">
+           <string>&lt;Automatic&gt;</string>
+          </property>
+         </item>
+        </widget>
        </item>
       </layout>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="hardwareIcon">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="softwareIcon">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="softwareLabel">
+       <property name="text">
+        <string>Software:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="versionLabel">
+       <property name="text">
+        <string>Version:</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="verticalSpacer">
@@ -82,6 +125,13 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QWidget</extends>
+   <header>QtWebKit/QWebView</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
