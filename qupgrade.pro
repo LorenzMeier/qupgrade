@@ -17,12 +17,14 @@ SOURCES += src/apps/qupgrade/main.cpp\
         src/apps/qupgrade/uploader.cpp \
         src/apps/qupgrade/qgc.cpp \
         src/apps/qupgrade/qgcfirmwareupgradeworker.cpp
+    src/apps/qupgrade/qgcfirmwareupgradeworker.cpp
 
 HEADERS  += src/apps/qupgrade/dialog.h \
             src/apps/qupgrade/hled.h \
             src/apps/qupgrade/uploader.h \
             src/apps/qupgrade/qgc.h \
             src/apps/qupgrade/qgcfirmwareupgradeworker.h
+    src/apps/qupgrade/qgcfirmwareupgradeworker.h
 
 INCLUDEPATH += src/apps/qupgrade
 
@@ -31,6 +33,21 @@ FORMS    += src/apps/qupgrade/dialog.ui
 #
 # Deployment
 #
+
+BASEDIR = $${IN_PWD}
+linux-g++|linux-g++-64{
+    debug {
+        TARGETDIR = $${OUT_PWD}/debug
+        BUILDDIR = $${OUT_PWD}/build-debug
+    }
+    release {
+        TARGETDIR = $${OUT_PWD}/release
+        BUILDDIR = $${OUT_PWD}/build-release
+    }
+} else {
+    TARGETDIR = $${OUT_PWD}
+    BUILDDIR = $${OUT_PWD}/build
+}
 
 # This is deployment black magic that automates the whole Visual Studio deployment process.
 # Just run the NSIS script from the deploy folder to create a complete installer.
@@ -80,20 +97,38 @@ win32-msvc2008|win32-msvc2010 {
 
         CONFIG(debug, debug|release) {
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\debug" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtCored4.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtGuid4.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtXmld4.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtXmlPatternsd4.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Cored.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Guid.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Xmld.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5XmlPatternsd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Widgetsd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\lib\\libEGLd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\lib\\libGLESv2d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icuin49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icudt49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icuuc49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+
         }
 
         CONFIG(release, debug|release) {
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\release" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtCore4.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtGui4.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtXml4.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\bin\\QtXmlPatterns4.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Core.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Gui.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Xml.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5XmlPatterns.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\Qt5Widgets.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\lib\\libEGL.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\lib\\libGLESv2.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icuin49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icudt49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010\\bin\\icuuc49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+
                 QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.exp"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.lib"$$escape_expand(\\n))
 
