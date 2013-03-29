@@ -3,7 +3,7 @@
 
 #include "qgcfirmwareupgradeworker.h"
 
-#include <QGC.h>
+#include <qgc.h>
 #include "uploader.h"
 #include "qextserialenumerator.h"
 
