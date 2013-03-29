@@ -37,15 +37,15 @@
 
 #include <sys/types.h>
 #include <stdint.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <io.h>
 
 #include "uploader.h"
 #include "qgc.h"
@@ -543,7 +543,7 @@ int
 PX4_Uploader::program(size_t fw_size)
 {
 	uint8_t	file_buf[PROG_MULTI_MAX];
-	ssize_t count;
+	unsigned count;
 	int ret;
 	size_t sent = 0;
 
@@ -559,7 +559,7 @@ PX4_Uploader::program(size_t fw_size)
 		}
         count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+		if (count != (unsigned)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)sent,
@@ -597,7 +597,7 @@ int
 PX4_Uploader::verify_rev2(size_t fw_size)
 {
 	uint8_t	file_buf[4];
-	ssize_t count;
+	unsigned count;
 	int ret;
 	size_t sent = 0;
 
@@ -619,7 +619,7 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 		}
 		count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+		if (count != (unsigned)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)sent,
@@ -641,7 +641,7 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 		send(count);
 		send(PROTO_EOC);
 
-		for (ssize_t i = 0; i < count; i++) {
+		for (unsigned i = 0; i < count; i++) {
 			uint8_t c;
 
 			ret = recv(c, 5000);
@@ -673,7 +673,7 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 {
 	int ret;
 	uint8_t	file_buf[4];
-	ssize_t count;
+	unsigned count;
     quint32 sum = 0;
     quint32 bytes_read = 0;
     quint32 crc = 0;
@@ -699,7 +699,7 @@ PX4_Uploader::verify_rev3(size_t fw_size_local)
 		}
 		count = read_with_retry(_fw_fd, file_buf, n);
 
-		if (count != (ssize_t)n) {
+		if (count != (unsigned)n) {
 			log("firmware read of %u bytes at %u failed -> %d errno %d", 
 			    (unsigned)n,
 			    (unsigned)bytes_read,
