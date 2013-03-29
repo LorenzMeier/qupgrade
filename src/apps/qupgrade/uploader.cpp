@@ -45,7 +45,10 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#ifdef Q_OS_WIN
 #include <io.h>
+#endif
 
 #include "uploader.h"
 #include "qgc.h"
