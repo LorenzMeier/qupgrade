@@ -139,7 +139,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             }
 
             PX4_Uploader uploader(port);
-            connect(&uploader, SIGNAL(upgradeProgressChanged(int percent)), this, SIGNAL(upgradeProgressChanged(int)));
+            connect(&uploader, SIGNAL(upgradeProgressChanged(int)), this, SIGNAL(upgradeProgressChanged(int)));
 
             // Die-hard flash the binary
             emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
