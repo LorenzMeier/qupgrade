@@ -26,7 +26,7 @@ QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QStr
     thread = new QThread;
 
     worker->moveToThread(thread);
-    //connect(worker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+//    connect(worker, SIGNAL(error(QString)), parent, SLOT(errorString(QString)));
     connect(thread, SIGNAL(started()), worker, SLOT(loadFirmware()));
     connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
     connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
@@ -36,32 +36,6 @@ QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QStr
     // Starts an event loop, and emits workerThread->started()
     thread->start();
     return worker;
-
-
-
-
-//    static QGCFirmwareUpgradeWorker *worker = NULL;
-//    static QThread *workerThread = NULL;
-    
-//    if (!worker) {
-//        worker = new QGCFirmwareUpgradeWorker;
-//        workerThread = new QThread(parent);
-//    } else {
-//        // Already instantiated and running, return running thread
-//        return worker;
-//    }
-
-//    worker->moveToThread(workerThread);
-//    connect(worker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
-//    connect(thread, SIGNAL(started()), worker, SLOT(process()));
-//    connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
-//    connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
-//    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-//    thread->start();
-
-//    // Starts an event loop, and emits workerThread->started()
-//    thread->start();
-//    return worker;
 }
 
 

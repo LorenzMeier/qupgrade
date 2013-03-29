@@ -40,6 +40,8 @@ private:
     QextSerialPort *port;
     QextSerialEnumerator *enumerator;
     QGCFirmwareUpgradeWorker *worker;
+
+    QString lastFilename;
 };
 
 #endif // DIALOG_H

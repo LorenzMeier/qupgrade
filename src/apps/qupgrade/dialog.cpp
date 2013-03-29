@@ -78,18 +78,21 @@ void Dialog::onUploadButtonClicked()
 
         // Pick file
         QString fileName = QFileDialog::getOpenFileName(this,
-                tr("Open Firmware File"), "/home/", tr("Firmware Files (*.px4 *.bin)"));
+                tr("Open Firmware File"), lastFilename, tr("Firmware Files (*.px4 *.bin)"));
 
         if (fileName.length() > 0) {
             // Got a filename, upload
             loading = true;
             ui->uploadButton->setText(tr("Cancel upload"));
+            lastFilename = filename;
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
             // Hook up text from worker to label
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
+            // Hook up error handling
+            connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         }
