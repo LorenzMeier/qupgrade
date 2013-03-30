@@ -2,7 +2,7 @@
 # QUpgrade - Cross-platform firmware flashing tool
 #
 
-QT       += core gui widgets webkit network
+QT       += core gui widgets webkit network webkitwidgets
 
 TARGET = qupgrade
 TEMPLATE = app
@@ -97,28 +97,28 @@ win32-msvc2008|win32-msvc2010 {
         # Copy dependencies
         BASEDIR_WIN = $$replace(BASEDIR,"/","\\")
         TARGETDIR_WIN = $$replace(TARGETDIR,"/","\\")
-        QTDIR_WIN = C:\\Qt\\Qt5.0.1-VS\\5.0.1\\msvc2010;
+        QTDIR_WIN = "C:\Qt\Qt5.0.1-VS\5.0.1\msvc2010"
 
         CONFIG(debug, debug|release) {
                 # Copy files
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\debug\\files" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Cored.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Guid.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Networkd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Webkitd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Xmld.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5XmlPatternsd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Widgetsd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libEGLd.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libGLESv2d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49d.dll" "$$TARGETDIR_WIN\\debug"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Cored.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Guid.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Networkd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Webkitd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Xmld.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5XmlPatternsd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Widgetsd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libEGLd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libGLESv2d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
 
         }
 
@@ -127,24 +127,24 @@ win32-msvc2008|win32-msvc2010 {
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\release\\files" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Core.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Gui.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Network.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Webkit.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Xml.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5XmlPatterns.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Widgets.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libEGL.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libGLESv2.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49.dll" "$$TARGETDIR_WIN\\release"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Core.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Gui.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Network.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Webkit.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Xml.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5XmlPatterns.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Widgets.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libEGL.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libGLESv2.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
 
-                QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.exp"$$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.lib"$$escape_expand(\\n))
+                #QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.exp"$$escape_expand(\\n))
+                #QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.lib"$$escape_expand(\\n))
 
                 # Copy Visual Studio DLLs
                 # Note that this is only done for release because the debugging versions of these DLLs cannot be redistributed.
