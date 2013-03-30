@@ -2,7 +2,7 @@
 # QUpgrade - Cross-platform firmware flashing tool
 #
 
-QT       += core gui widgets webkit network
+QT       += core gui widgets webkit network webkitwidgets
 
 TARGET = qupgrade
 TEMPLATE = app
