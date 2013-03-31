@@ -34,7 +34,10 @@ public slots:
 private slots:
     void onPortNameChanged(const QString &name);
     void onUploadButtonClicked();
+    void onDownloadFinished();
     void onDownloadRequested(const QNetworkRequest &request);
+    void onHomeRequested();
+    void onLinkClicked(const QUrl&);
 
 private:
     bool loading;
