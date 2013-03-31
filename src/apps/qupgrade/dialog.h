@@ -11,6 +11,7 @@ class QextSerialPort;
 class QextSerialEnumerator;
 class QGCFirmwareUpgradeWorker;
 class QNetworkRequest;
+class QNetworkReply;
 
 class Dialog : public QDialog
 {

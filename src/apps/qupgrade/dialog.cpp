@@ -122,9 +122,11 @@ void Dialog::onLinkClicked(const QUrl &url)
 
     // If a IO firmware file, open save as Dialog
     if (firmwareFile.endsWith(".bin") && firmwareFile.contains("px4io")) {
-        filename = QFileDialog::getSaveFileName(this, tr("Save PX4IO Firmware File to microSD Card"),
-                                                QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + firmwareFile,
-                                    tr("PX4IO Firmware (*.bin)"));
+        QString path = QString(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+        qDebug() << path;
+        filename = QFileDialog::getExistingDirectory(this, tr("Select folder (microSD Card)"),
+                                                path);
+        filename.append("/" + firmwareFile);
     } else {
 
         // Make sure the user doesn't screw up flashing
@@ -147,6 +149,10 @@ void Dialog::onLinkClicked(const QUrl &url)
         filename += "/" + firmwareFile;
     }
 
+    if (filename == "") {
+        return;
+    }
+
     // Else, flash the firmware
     lastFilename = filename;
 
@@ -157,7 +163,7 @@ void Dialog::onLinkClicked(const QUrl &url)
 
     ui->upgradeLog->appendHtml(tr("Downloading firmware file <a href=\"%1\">%1</a>").arg(url.toString()));
 
-    QNetworkRequest newRequest;
+    QNetworkRequest newRequest(url);
     newRequest.setUrl(url);
     newRequest.setAttribute(QNetworkRequest::User, filename);
 
@@ -165,6 +171,8 @@ void Dialog::onLinkClicked(const QUrl &url)
     QNetworkReply *reply = networkManager->get(newRequest);
     connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
     connect(reply, SIGNAL(finished()), this, SLOT(onDownloadFinished()));
+//    connect(networkManager, SIGNAL(finished(QNetworkReply*)),
+//                SLOT(onDownloadFinished(QNetworkReply*)));
 }
 
 void Dialog::onDownloadRequested(const QNetworkRequest &request)
@@ -183,6 +191,14 @@ void Dialog::onPortNameChanged(const QString & /*name*/)
 void Dialog::onDownloadFinished()
 {
     qDebug() << "DOWNLOAD FINISHED";
+
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
+
+    if (!reply) {
+        // bail out, nothing to do
+        return;
+    }
+
     if (loading) {
         worker->abortUpload();
         loading = false;
@@ -196,6 +212,18 @@ void Dialog::onDownloadFinished()
         QString fileName = lastFilename;
 
         qDebug() << "Handling filename:" << fileName;
+
+        // Store file in download location
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            fprintf(stderr, "Could not open %s for writing: %s\n",
+                    qPrintable(fileName),
+                    qPrintable(file.errorString()));
+            return;
+        }
+
+        file.write(reply->readAll());
+
 
         if (lastFilename.contains("px4io")) {
             // Done, bail out

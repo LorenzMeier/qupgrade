@@ -207,14 +207,14 @@ PX4_Uploader::upload(const QString& filename, bool insync)
         return -1;
     }
 
-//    /* look for the bootloader */
-//    ret = sync();
+    /* look for the bootloader */
+    ret = sync();
 
-//    if (ret != OK) {
-//        /* this is immediately fatal */
-//        log("bootloader not responding");
-//        return ret;
-//    }
+    if (ret != OK) {
+        /* this is immediately fatal */
+        log("bootloader not responding");
+        return ret;
+    }
 
     if (filename.endsWith(".px4")) {
         log("decoding JSON (%s)", filename.toStdString().c_str());
@@ -480,7 +480,7 @@ PX4_Uploader::upload(const QString& filename, bool insync)
 			return ret;
 		}
 		
-        log("update complete (time: %f s)", 1e-3f*(float)(QGC::groundTimeMilliseconds() - startUploadTime));
+        log("update complete (time: %.2f s)", 1e-3f*(float)(QGC::groundTimeMilliseconds() - startUploadTime));
 
 		ret = OK;
 		break;

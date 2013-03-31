@@ -81,8 +81,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
         foreach (QextPortInfo info, ports) {
 
-//            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
-//                continue;
+            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+                continue;
 
             qDebug() << "port name:"       << info.portName;
             qDebug() << "friendly name:"   << info.friendName;
