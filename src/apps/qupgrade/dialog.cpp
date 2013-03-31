@@ -205,7 +205,7 @@ void Dialog::onDownloadFinished()
             // Hook up text from worker to label
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up error handling
-            connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
+            //connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         }

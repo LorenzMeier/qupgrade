@@ -17,6 +17,7 @@ signals:
     void upgradeProgressChanged(int percent);
     void validPortFound(const QString& portName);
     void loadFinished(bool success);
+    void finished();
     
 public slots:
 

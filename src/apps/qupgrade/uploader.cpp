@@ -779,10 +779,13 @@ PX4_Uploader::log(const char *fmt, ...)
 {
 	va_list	ap;
 
-    printf("[PX4 Uploader] ");
+    char str[1000];
+
+    sprintf(str, "[PX4 Uploader] ");
 	va_start(ap, fmt);
-	vprintf(fmt, ap);
+    vsprintf(str, fmt, ap);
 	va_end(ap);
-	printf("\n");
-	fflush(stdout);
+    //printf("\n");
+    //fflush(stdout);
+    emit upgradeStatusChanged(QString(str));
 }

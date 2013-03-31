@@ -57,6 +57,7 @@ public:
 
 signals:
      void upgradeProgressChanged(int percent);
+     void upgradeStatusChanged(const QString& str);
 
 private:
 	enum {

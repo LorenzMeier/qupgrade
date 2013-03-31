@@ -111,7 +111,9 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             }
 
             PX4_Uploader uploader(port);
+            // Relay status to top-level UI
             connect(&uploader, SIGNAL(upgradeProgressChanged(int)), this, SIGNAL(upgradeProgressChanged(int)));
+            connect(&uploader, SIGNAL(upgradeStatusChanged(QString)), this, SIGNAL(upgradeStatusChanged(QString)));
 
             // Die-hard flash the binary
             emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
@@ -131,6 +133,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             // bail out on success
             if (ret == 0) {
                 emit loadFinished(true);
+                emit finished();
                 return;
             }
         }
@@ -138,6 +141,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
     _abortUpload = false;
     emit loadFinished(false);
+    emit finished();
 
 }
 
