@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QWebHistory>
 #include <QMessageBox>
+#include <QSettings>
 
 #include "qgc.h"
 #include "qgcfirmwareupgradeworker.h"
@@ -40,15 +41,18 @@ Dialog::Dialog(QWidget *parent) :
     enumerator->setUpNotifications();
 
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
-    connect(ui->uploadButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
+    connect(ui->flashButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
+    connect(ui->selectFileButton, SIGNAL(clicked()), SLOT(onFileSelectRequested()));
+    connect(ui->cancelButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
 
     connect(ui->webView->page(), SIGNAL(downloadRequested(const QNetworkRequest&)), this, SLOT(onDownloadRequested(const QNetworkRequest&)));
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     connect(ui->webView->page(), SIGNAL(linkClicked(const QUrl&)), this, SLOT(onLinkClicked(const QUrl&)));
 
     connect(ui->prevButton, SIGNAL(clicked()), ui->webView, SLOT(back()));
-    connect(ui->forwardButton, SIGNAL(clicked()), ui->webView, SLOT(forward()));
     connect(ui->homeButton, SIGNAL(clicked()), this, SLOT(onHomeRequested()));
+
+    connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
 
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
@@ -71,10 +75,14 @@ Dialog::Dialog(QWidget *parent) :
     // about:blank shouldn't be part of the history
     ui->webView->history()->clear();
     onHomeRequested();
+
+    // load settings
+    loadSettings();
 }
 
 Dialog::~Dialog()
 {
+    storeSettings();
     delete ui;
     delete port;
 }
@@ -91,6 +99,30 @@ void Dialog::changeEvent(QEvent *e)
     }
 }
 
+void Dialog::onToggleAdvancedMode(bool enabled)
+{
+    ui->selectFileButton->setVisible(enabled);
+    ui->flashButton->setVisible(enabled);
+    ui->portBox->setVisible(enabled);
+    ui->portLabel->setVisible(enabled);
+}
+
+void Dialog::loadSettings()
+{
+    QSettings set;
+    lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
+    ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
+    onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
+}
+
+void Dialog::storeSettings()
+{
+    QSettings set;
+    if (lastFilename != "")
+        set.setValue("LAST_FILENAME", lastFilename);
+    set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
+}
+
 void Dialog::onHomeRequested()
 {
     // Load start file into web view
@@ -102,6 +134,8 @@ void Dialog::onHomeRequested()
 //    ui->webView->setHtml(str);
 //    ui->webView->history()->clear();
     ui->webView->setUrl(QUrl::fromUserInput(QCoreApplication::applicationDirPath()+"/files/html/index.html"));
+    ui->homeButton->setEnabled(false);
+    ui->prevButton->setEnabled(false);
 }
 
 void Dialog::onLinkClicked(const QUrl &url)
@@ -113,6 +147,8 @@ void Dialog::onLinkClicked(const QUrl &url)
     // If not a firmware file, ignore
     if (!(firmwareFile.endsWith(".px4") || firmwareFile.endsWith(".bin"))) {
         ui->webView->load(url);
+        ui->homeButton->setEnabled(true);
+        ui->prevButton->setEnabled(true);
         return;
     }
 
@@ -202,7 +238,8 @@ void Dialog::onDownloadFinished()
     if (loading) {
         worker->abortUpload();
         loading = false;
-        ui->uploadButton->setText(tr("Select File and Upload"));
+        ui->flashButton->setText(tr("Flash"));
+        ui->cancelButton->setEnabled(false);
     } else {
 
         // Reset progress
@@ -233,7 +270,8 @@ void Dialog::onDownloadFinished()
         if (fileName.length() > 0) {
             // Got a filename, upload
             loading = true;
-            ui->uploadButton->setText(tr("Cancel upload"));
+            ui->flashButton->setText(tr("Cancel"));
+            ui->cancelButton->setEnabled(true);
             lastFilename = fileName;
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
@@ -254,25 +292,38 @@ void Dialog::onDownloadFinished()
     }
 }
 
+void Dialog::onFileSelectRequested()
+{
+    if (loading) {
+        worker->abortUpload();
+        loading = false;
+        ui->flashButton->setText(tr("Flash"));
+    }
+
+    // Pick file
+    QString fileName = QFileDialog::getOpenFileName(this,
+                            tr("Open Firmware File"), lastFilename, tr("Firmware Files (*.px4 *.bin)"));
+
+    if (fileName != "")
+        lastFilename = fileName;
+}
+
 void Dialog::onUploadButtonClicked()
 {
     if (loading) {
         worker->abortUpload();
         loading = false;
-        ui->uploadButton->setText(tr("Select File and Upload"));
+        ui->flashButton->setText(tr("Flash"));
+        ui->cancelButton->setEnabled(false);
     } else {
 
-        // Pick file
-        QString fileName = QFileDialog::getOpenFileName(this,
-                tr("Open Firmware File"), lastFilename, tr("Firmware Files (*.px4 *.bin)"));
-
-        if (fileName.length() > 0) {
+        if (lastFilename.length() > 0) {
             // Got a filename, upload
             loading = true;
-            ui->uploadButton->setText(tr("Cancel upload"));
-            lastFilename = fileName;
+            ui->flashButton->setText(tr("Cancel"));
+            ui->cancelButton->setEnabled(true);
 
-            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename);
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
             // Hook up text from worker to label
@@ -302,7 +353,7 @@ void Dialog::onPortAddedOrRemoved()
 void Dialog::onLoadFinished(bool success)
 {
     loading = false;
-    ui->uploadButton->setText(tr("Select File and Upload"));
+    ui->flashButton->setText(tr("Flash"));
 
     if (success) {
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));

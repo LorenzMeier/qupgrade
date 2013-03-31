@@ -26,6 +26,8 @@ signals:
 
 protected:
     void changeEvent(QEvent *e);
+    void loadSettings();
+    void storeSettings();
 
 public slots:
     void onPortAddedOrRemoved();
@@ -34,11 +36,13 @@ public slots:
 
 private slots:
     void onPortNameChanged(const QString &name);
+    void onFileSelectRequested();
     void onUploadButtonClicked();
     void onDownloadFinished();
     void onDownloadRequested(const QNetworkRequest &request);
     void onHomeRequested();
     void onLinkClicked(const QUrl&);
+    void onToggleAdvancedMode(bool enabled);
 
 private:
     bool loading;
