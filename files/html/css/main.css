@@ -19,8 +19,9 @@ textarea {
 }
 
 body {
-    font-size: 1em;
-    line-height: 1.4;
+    font-size: 0.95em;
+    line-height: 1.3;
+    font-weight: normal;
 }
 
 /*

@@ -8,20 +8,21 @@
 
 body {
     font-family: 'Open Sans', sans-serif;
-    margin: 0.5em;
+    margin-left: 1.2em;
+    margin-right: 1.2em;
+    margin-top: 0.3em;
     color: #050508;
     background-color: #FFFFFF;
-    font-weight: lighter;
 }
 
 h1 {
-    font-size: 2.6em;
+    font-size: 2.45em;
     font-weight: lighter;
     margin-top: 1em;
 }
 
 h2 {
-    font-size: 1.8em;
+    font-size: 1.75em;
     font-weight: lighter;
 }
 
