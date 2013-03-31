@@ -12,6 +12,8 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QTimer>
+#include <QWebHistory>
 
 #include "qgc.h"
 #include "qgcfirmwareupgradeworker.h"
@@ -52,8 +54,6 @@ Dialog::Dialog(QWidget *parent) :
 
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 
-    onHomeRequested();
-
     // Adjust the size
     const int screenWidth = QApplication::desktop()->width();
     const int screenHeight = QApplication::desktop()->height();
@@ -64,9 +64,10 @@ Dialog::Dialog(QWidget *parent) :
     }
     else
     {
-        resize(800, qMin(screenHeight, 600));
-        show();
+        resize(700, qMin(screenHeight, 750));
     }
+
+    QTimer::singleShot(500, this, SLOT(onHomeRequested()));
 }
 
 Dialog::~Dialog()
@@ -92,10 +93,12 @@ void Dialog::onHomeRequested()
     // Load start file into web view
     // for some reason QWebView has substantiall issues with local files.
     // Trick it by providing HTML directly.
-    QFile html(QCoreApplication::applicationDirPath()+"/files/index.html");
+    QFile html(QCoreApplication::applicationDirPath()+"/files/html/index.html");
     html.open(QIODevice::ReadOnly | QIODevice::Text);
     QString str = html.readAll();
     ui->webView->setHtml(str);
+    ui->webView->history()->clear();
+    ui->webView->setUrl(QUrl::fromUserInput(QCoreApplication::applicationDirPath()+"/files/html/index.html"));
 }
 
 void Dialog::onLinkClicked(const QUrl &url)
@@ -103,27 +106,45 @@ void Dialog::onLinkClicked(const QUrl &url)
     qDebug() << "LINK" << url.toString();
 
     QString firmwareFile = QFileInfo(url.toString()).fileName();
+
+    // If not a firmware file, ignore
     if (!(firmwareFile.endsWith(".px4") || firmwareFile.endsWith(".bin"))) {
         ui->webView->load(url);
         return;
     }
 
+    qDebug() << "FW FILE:" << firmwareFile;
+
+    QString filename;
+
+    // If a IO firmware file, open save as Dialog
+    if (firmwareFile.endsWith(".bin") && firmwareFile.contains("px4io")) {
+        filename = QFileDialog::getSaveFileName(this, tr("Save PX4IO Firmware File to microSD Card"),
+                                                QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + firmwareFile,
+                                    tr("PX4IO Firmware (*.bin)"));
+    } else {
+        filename = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+
+        if (filename.isEmpty()) {
+            qDebug() << "Falling back to temp dir";
+            QString filename = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+
+            // If still empty, bail out
+            if (filename.isEmpty())
+                ui->upgradeLog->appendHtml(tr("FAILED storing firmware to downloads or temp directory. Harddisk not writable."));
+                return;
+        }
+
+        filename += "/" + firmwareFile;
+    }
+
+    // Else, flash the firmware
+    lastFilename = filename;
+
     // Pattern matched, abort current QWebView load
     ui->webView->stop();
 
-    QString filename = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-
-    if (filename.isEmpty()) {
-        qDebug() << "Falling back to temp dir";
-        QString filename = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-
-        // If still empty, bail out
-        if (filename.isEmpty())
-            return;
-    }
-
-    filename += "/" + firmwareFile;
-    lastFilename = filename;
+    qDebug() << "LASTFILENAME" << lastFilename;
 
     ui->upgradeLog->appendHtml(tr("Downloading firmware file <a href=\"%1\">%1</a>").arg(url.toString()));
 
@@ -134,7 +155,7 @@ void Dialog::onLinkClicked(const QUrl &url)
     QNetworkAccessManager *networkManager = ui->webView->page()->networkAccessManager();
     QNetworkReply *reply = networkManager->get(newRequest);
     connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
-    connect( reply, SIGNAL(finished()), this, SLOT(onDownloadFinished()));
+    connect(reply, SIGNAL(finished()), this, SLOT(onDownloadFinished()));
 }
 
 void Dialog::onDownloadRequested(const QNetworkRequest &request)
@@ -152,7 +173,7 @@ void Dialog::onPortNameChanged(const QString & /*name*/)
 
 void Dialog::onDownloadFinished()
 {
-
+    qDebug() << "DOWNLOAD FINISHED";
     if (loading) {
         worker->abortUpload();
         loading = false;
@@ -164,6 +185,13 @@ void Dialog::onDownloadFinished()
 
         // Pick file
         QString fileName = lastFilename;
+
+        qDebug() << "Handling filename:" << fileName;
+
+        if (lastFilename.contains("px4io")) {
+            // Done, bail out
+            return;
+        }
 
         if (fileName.length() > 0) {
             // Got a filename, upload

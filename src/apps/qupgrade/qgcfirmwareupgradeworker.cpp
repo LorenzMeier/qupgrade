@@ -78,10 +78,11 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
         SLEEP::usleep(100000);
 
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
-        //! [1]
-        qDebug() << "List of ports:";
-        //! [2]
+
         foreach (QextPortInfo info, ports) {
+
+            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+                continue;
 
             qDebug() << "port name:"       << info.portName;
             qDebug() << "friendly name:"   << info.friendName;
@@ -91,9 +92,6 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             qDebug() << "product ID:"      << info.productID;
 
             qDebug() << "===================================";
-
-            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
-                continue;
 
             QString openString = info.portName;
 

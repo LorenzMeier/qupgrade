@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/px4.css">
+        <link href='fonts/opensans' rel='stylesheet' type='text/css'>
+        <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+
+        <style>
+            .myButton {
+                -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+                -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+                box-shadow:inset 0px 1px 0px 0px #ffffff;
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ffffff), color-stop(1, #d1d1d1) );
+                background:-moz-linear-gradient( center top, #ffffff 5%, #d1d1d1 100% );
+                filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#d1d1d1');
+                background-color:#ffffff;
+                -moz-border-radius:6px;
+                -webkit-border-radius:6px;
+                border-radius:6px;
+                border:1px solid #dcdcdc;
+                display:inline-block;
+                color:#777777;
+                font-family:arial;
+                font-size:1em;
+                font-weight:bold;
+                padding:2px 12px;
+                text-decoration:none;
+                text-shadow:1px 1px 0px #ffffff;
+                margin-left: 1em;
+            }.myButton:hover {
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #d1d1d1), color-stop(1, #ffffff) );
+                background:-moz-linear-gradient( center top, #d1d1d1 5%, #ffffff 100% );
+                filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#d1d1d1', endColorstr='#ffffff');
+                background-color:#d1d1d1;
+            }.myButton:active {
+                position:relative;
+                top:1px;
+            }
+</style>
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+        <!-- Add your site or application content here -->
+        <table>
+            <tr>
+                <td><img src="img/px4_logo.png"></img></td>
+                <td><h1>Firmware Upgrade</h2></td>
+            </tr>
+        </table>
+        <h2>Online Firmware Downloads</h2>
+        <ul>
+            <li>Flash Firmware for PX4 native</li>
+            <li><a href="http://firmware.diydrones.com">Flash APM Firmware</a></li>
+            <li><a href="http://firmware.diydrones.com">Flash 3DR Radio Firmware</a></li>
+        </ul>
+        <h2>Offline Firmware Upgrade</h2>
+        <p><i>QUpgrade comes with a minimal set of binaries for offline use (last update: March 31, 2013)</i></p>
+        <ul>
+           <li><img src="img/px4_logo_small.png"></img> <strong>PX4 stack</strong> on PX4FMU v1.6+ beta (<i>all platforms</i>) <strong><a href="../firmware/px4_native/px4fmu.bin" class="myButton">Flash Now</a></strong>
+            <li><img src="img/apm_logo_small.png"></img> <strong>APM Plane</strong> on PX4FMU v1.6+ (<i>planes</i>) <strong><a href="../firmware/apm_plane/px4fmu.px4" class="myButton">Flash Now</a></strong>
+        </ul>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
+        <script src="js/plugins.js"></script>
+        <script src="js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+            (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+            g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+            s.parentNode.insertBefore(g,s)}(document,'script'));
+        </script>
+    </body>
+</html>

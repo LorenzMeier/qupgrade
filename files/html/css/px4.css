@@ -1,0 +1,25 @@
+/*
+ * PX4 / QUpgrade visual style
+ */
+
+/* ==========================================================================
+   Visual style
+   ========================================================================== */
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 1em;
+    color: #050508;
+    background-color: #FFFFFF;
+    font-weight: lighter;
+}
+
+h1 {
+    font-size: 2.6em;
+    font-weight: lighter;
+}
+
+h2 {
+    font-size: 1.8em;
+    font-weight: lighter;
+}
