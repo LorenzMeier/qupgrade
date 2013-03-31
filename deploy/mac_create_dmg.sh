@@ -1,5 +1,5 @@
 #!/bin/sh
-cp -r ../../qupgrade-build-desktop-Qt_5_0_0__gcc_64__Release/qupgrade.app .
+cp -r ../../qupgrade-build-desktop-Qt_5_0_1__gcc_64__Release/qupgrade.app .
 
 echo -e '\n\nStarting to create disk image. This may take a while..\n'
 macdeployqt qupgrade.app -dmg

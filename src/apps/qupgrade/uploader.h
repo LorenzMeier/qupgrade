@@ -44,6 +44,7 @@
 
 #include <QObject>
 #include <QFile>
+#include <QByteArray>
 
 class PX4_Uploader : public QObject
 {

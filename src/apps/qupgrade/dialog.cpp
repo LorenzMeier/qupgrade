@@ -14,6 +14,7 @@
 #include <QDesktopWidget>
 #include <QTimer>
 #include <QWebHistory>
+#include <QMessageBox>
 
 #include "qgc.h"
 #include "qgcfirmwareupgradeworker.h"
@@ -67,7 +68,9 @@ Dialog::Dialog(QWidget *parent) :
         resize(700, qMin(screenHeight, 750));
     }
 
-    QTimer::singleShot(500, this, SLOT(onHomeRequested()));
+    // about:blank shouldn't be part of the history
+    ui->webView->history()->clear();
+    onHomeRequested();
 }
 
 Dialog::~Dialog()
@@ -93,11 +96,11 @@ void Dialog::onHomeRequested()
     // Load start file into web view
     // for some reason QWebView has substantiall issues with local files.
     // Trick it by providing HTML directly.
-    QFile html(QCoreApplication::applicationDirPath()+"/files/html/index.html");
-    html.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString str = html.readAll();
-    ui->webView->setHtml(str);
-    ui->webView->history()->clear();
+//    QFile html(QCoreApplication::applicationDirPath()+"/files/html/index.html");
+//    html.open(QIODevice::ReadOnly | QIODevice::Text);
+//    QString str = html.readAll();
+//    ui->webView->setHtml(str);
+//    ui->webView->history()->clear();
     ui->webView->setUrl(QUrl::fromUserInput(QCoreApplication::applicationDirPath()+"/files/html/index.html"));
 }
 
@@ -123,6 +126,12 @@ void Dialog::onLinkClicked(const QUrl &url)
                                                 QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + firmwareFile,
                                     tr("PX4IO Firmware (*.bin)"));
     } else {
+
+        // Make sure the user doesn't screw up flashing
+        QMessageBox msgBox;
+        msgBox.setText("Please unplug your PX4 board now");
+        msgBox.exec();
+
         filename = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 
         if (filename.isEmpty()) {
@@ -208,6 +217,11 @@ void Dialog::onDownloadFinished()
             //connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+
+            // Make sure user gets the board going now
+            QMessageBox msgBox;
+            msgBox.setText("Please connect your PX4 board now");
+            msgBox.exec();
         }
     }
 }
@@ -261,6 +275,12 @@ void Dialog::onLoadFinished(bool success)
 {
     loading = false;
     ui->uploadButton->setText(tr("Select File and Upload"));
+
+    if (success) {
+        ui->upgradeLog->appendPlainText(tr("Upload succeeded."));
+    } else {
+        ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
+    }
 }
 
 void Dialog::onDownloadProgress(qint64 curr, qint64 total)

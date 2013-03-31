@@ -60,7 +60,6 @@
 #include <QTemporaryFile>
 #include <QDebug>
 #include <QDir>
-//#include "SerialLink.h"
 
 #undef OK
 #define OK 0
@@ -208,22 +207,22 @@ PX4_Uploader::upload(const QString& filename, bool insync)
         return -1;
     }
 
-    /* look for the bootloader */
-    ret = sync();
+//    /* look for the bootloader */
+//    ret = sync();
 
-    if (ret != OK) {
-        /* this is immediately fatal */
-        log("bootloader not responding");
-        return ret;
-    }
+//    if (ret != OK) {
+//        /* this is immediately fatal */
+//        log("bootloader not responding");
+//        return ret;
+//    }
 
     if (filename.endsWith(".px4")) {
-        log("decoding JSON");
+        log("decoding JSON (%s)", filename.toStdString().c_str());
         // Attempt to decode JSON
         QFile json(filename);
         json.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString jsonStr = json.readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
+        QByteArray jbytes = json.readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(jbytes);
 
         if (doc.isNull()) {
             // Error, bail out
@@ -231,16 +230,120 @@ PX4_Uploader::upload(const QString& filename, bool insync)
             return -1;
         }
 
+
         QJsonObject px4 = doc.object();
+
+        int imageSize = (int) (px4.value(QString("image_size")).toDouble());
 
         checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
         log("loaded file for board ID %d", checkBoardId);
         QString str = px4.value(QString("description")).toString();
         log("description: %s", str.toStdString().c_str());
+        QString identity = px4.value(QString("git_identity")).toString();
+        log("GIT identity: %s", identity.toStdString().c_str());
+        log("uncompressed image size: %d", imageSize);
 
-        _fw_fd.setFileName(QDir::tempPath() + "/px4upload" + QGC::groundTimeMilliseconds() + ".bin");
+        _fw_fd.setFileName(QDir::tempPath() + "/px4upload_" + QGC::groundTimeMilliseconds() + ".bin");
         _fw_fd.open(QIODevice::ReadWrite);
-        QByteArray b = QByteArray::fromBase64(qUncompress(px4.value(QString("image")).toVariant().toByteArray()));
+
+        // XXX Qt's JSON string handling is terribly broken, strings
+        // with some length (18K / 25K) are just weirdly cut.
+        // The code below works around this by manually 'parsing'
+        // for the image string. Since its compressed / checksummed
+        // this should be fine.
+
+//        QJsonValue img = px4.value(QString("image"));
+
+//        // Validate that we've got a string
+//        if (img.type() != QJsonValue::String) {
+//            log("firmware file of wrong type, aborting");
+//            return -1;
+//        }
+
+        // Convert String to QByteArray and unzip it
+        QByteArray raw;
+        raw.clear();
+
+        qDebug() << "target size:" << imageSize;
+
+        raw.append((unsigned char)((imageSize >> 24) & 0xFF));
+        raw.append((unsigned char)((imageSize >> 16) & 0xFF));
+        raw.append((unsigned char)((imageSize >> 8) & 0xFF));
+        raw.append((unsigned char)((imageSize >> 0) & 0xFF));
+
+//        log("size: %02x %02x %02x %02x", (unsigned char)((imageSize >> 24) & 0xFF),
+//            (unsigned char)((imageSize >> 16) & 0xFF),
+//            (unsigned char)((imageSize >> 8) & 0xFF),
+//            (unsigned char)((imageSize >> 0) & 0xFF));
+
+        QString j8(jbytes);
+
+        QStringList list = j8.split("\"image\": \"");
+        list = list.last().split("\"");
+
+        QByteArray raw64 = list.first().toUtf8();
+
+        raw.append(QByteArray::fromBase64(raw64));
+        QByteArray uncompressed = qUncompress(raw);
+
+//        log("raw: %02x %02x %02x %02x", (unsigned char)raw.at(4),
+//            (unsigned char)raw.at(5),
+//            (unsigned char)raw.at(6),
+//            (unsigned char)raw.at(7));
+
+//        qDebug() << "raw count" << raw.length() << "raw img str" << img.toString().length();
+
+//        QFile test("/Users/user/src/Firmware/Images/px4fmu.bin");
+
+//        test.open(QIODevice::ReadOnly);
+
+//        QByteArray testb = test.readAll();
+
+//        QByteArray testc = qCompress(testb, 9);
+//        QFile tout("/Users/user/Documents/px4test.txt");
+//        tout.open(QIODevice::WriteOnly);
+
+//        log("Qt size: %02x %02x %02x %02x", (unsigned char) testc.at(0),
+//            (unsigned char) testc.at(1), (unsigned char) testc.at(2), (unsigned char) testc.at(3));
+
+//        log("Qt raw: %02x %02x %02x %02x", (unsigned char)testc.at(4),
+//            (unsigned char)testc.at(5),
+//            (unsigned char)testc.at(6),
+//            (unsigned char)testc.at(7));
+
+//        QByteArray testd = testc.remove(0, 4);
+//        QByteArray test64 = testd.toBase64();
+//        log("base 64 len: %d", (int)test64.count());
+
+//        tout.write(test64);
+
+//        if (raw64.count() != test64.count()) {
+//            log("ERR: Size mismatch: raw64: %d, test64: %d", (int)raw64.count(), (int)test64.count());
+//        } else {
+
+//            for (int i = 0; i < test64.count(); i++)
+//            {
+//                if (raw64.at(i) != test64.at(i)) {
+//                    log("ERR: DIFF in data: %02x != %02x", raw64.at(i), test64.at(i));
+//                }
+//            }
+//        }
+
+//        qDebug() << "uncompressed size:" << uncompressed.count();
+
+        QByteArray b = uncompressed;
+
+        log("firmware size: %d bytes, expected %d bytes", b.count(), imageSize);
+
+        if (b.count() == 0 || b.count() != imageSize) {
+            log("firmware file invalid, aborting");
+            return -1;
+        }
+
+        // pad image to 4-byte length
+        while ((b.count() % 4) != 0)
+            b.append(0xFF);
+
         _fw_fd.write(b);
         _fw_fd.seek(0);
         tempfile = true;
@@ -781,11 +884,12 @@ PX4_Uploader::log(const char *fmt, ...)
 
     char str[1000];
 
-    sprintf(str, "[PX4 Uploader] ");
+    int used = sprintf(str, "[PX4 Uploader] ");
 	va_start(ap, fmt);
-    vsprintf(str, fmt, ap);
+    used = vsprintf(str+used, fmt, ap);
 	va_end(ap);
     //printf("\n");
     //fflush(stdout);
     emit upgradeStatusChanged(QString(str));
+    qDebug() << QString(str);
 }

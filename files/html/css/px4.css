@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Open Sans', sans-serif;
-    margin: 1em;
+    margin: 0.5em;
     color: #050508;
     background-color: #FFFFFF;
     font-weight: lighter;
@@ -17,9 +17,19 @@ body {
 h1 {
     font-size: 2.6em;
     font-weight: lighter;
+    margin-top: 1em;
 }
 
 h2 {
     font-size: 1.8em;
     font-weight: lighter;
+}
+
+table {
+	margin: 0em;
+}
+
+td {
+	margin: 0em;
+	padding: 0em;
 }

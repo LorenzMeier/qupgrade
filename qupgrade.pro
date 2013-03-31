@@ -2,13 +2,7 @@
 # QUpgrade - Cross-platform firmware flashing tool
 #
 
-QT       += core gui widgets webkit network
-
-macx|macx-g++42|macx-g++|macx-llvm {
-    # Add nothing on Mac OS
-} else {
-QT       += webkitwidgets
-}
+QT       += core gui widgets webkit network webkitwidgets
 
 TARGET = qupgrade
 TEMPLATE = app
