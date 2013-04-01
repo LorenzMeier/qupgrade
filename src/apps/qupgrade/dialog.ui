@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>600</width>
-    <height>400</height>
+    <height>200</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -34,31 +34,20 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="7">
-        <widget class="QProgressBar" name="upgradeProgressBar">
-         <property name="value">
-          <number>0</number>
+       <item row="0" column="5">
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="homeButton">
-         <property name="text">
-          <string>Home</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="7">
-        <widget class="QPushButton" name="cancelButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="8">
+       <item row="4" column="0" colspan="9">
         <widget class="QPlainTextEdit" name="upgradeLog">
          <property name="readOnly">
           <bool>true</bool>
@@ -68,7 +57,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="8">
+       <item row="3" column="0" colspan="9">
         <widget class="QWebView" name="webView">
          <property name="url">
           <url>
@@ -96,21 +85,14 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="selectFileButton">
-         <property name="text">
-          <string>Select File</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="7">
+       <item row="0" column="8">
         <widget class="QPushButton" name="flashButton">
          <property name="text">
           <string>Flash</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="7">
+       <item row="1" column="8">
         <widget class="QCheckBox" name="advancedCheckBox">
          <property name="text">
           <string>Advanced</string>
@@ -137,6 +119,20 @@
          </property>
         </widget>
        </item>
+       <item row="5" column="0" colspan="7">
+        <widget class="QProgressBar" name="upgradeProgressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="homeButton">
+         <property name="text">
+          <string>Home</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="4">
         <widget class="QSpinBox" name="boardIdSpinBox">
          <property name="minimum">
@@ -147,18 +143,32 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+       <item row="5" column="8">
+        <widget class="QPushButton" name="cancelButton">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
+         <property name="text">
+          <string>Cancel</string>
          </property>
-        </spacer>
+        </widget>
+       </item>
+       <item row="1" column="7">
+        <widget class="QCheckBox" name="browserCheckBox">
+         <property name="text">
+          <string>Browser</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QPushButton" name="selectFileButton">
+         <property name="text">
+          <string>Select File</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
