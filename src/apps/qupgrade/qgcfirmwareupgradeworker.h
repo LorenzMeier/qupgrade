@@ -53,7 +53,11 @@ public slots:
      */
     void loadFirmware();
 
-
+    /**
+     * @brief Set the board ID this uploader only accepts
+     * @param id
+     */
+    void setBoardId(int id);
 
     /**
      * @brief Abort upgrade worker
@@ -65,6 +69,7 @@ protected:
 
 private:
     bool _abortUpload;
+    int _filterBoardId;
     QextSerialPort *port;
     QString filename;
 };

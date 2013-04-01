@@ -105,6 +105,8 @@ void Dialog::onToggleAdvancedMode(bool enabled)
     ui->flashButton->setVisible(enabled);
     ui->portBox->setVisible(enabled);
     ui->portLabel->setVisible(enabled);
+    ui->boardIdLabel->setVisible(enabled);
+    ui->boardIdSpinBox->setVisible(enabled);
 }
 
 void Dialog::loadSettings()
@@ -112,6 +114,7 @@ void Dialog::loadSettings()
     QSettings set;
     lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
+    ui->boardIdSpinBox->setValue(set.value("BOARD_ID", 5).toInt());
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
 }
 
@@ -121,6 +124,7 @@ void Dialog::storeSettings()
     if (lastFilename != "")
         set.setValue("LAST_FILENAME", lastFilename);
     set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
+    set.setValue("BOARD_ID", ui->boardIdSpinBox->value());
 }
 
 void Dialog::onHomeRequested()
@@ -324,6 +328,12 @@ void Dialog::onUploadButtonClicked()
             ui->cancelButton->setEnabled(true);
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename);
+
+            // Set board ID for worker
+            if (ui->boardIdSpinBox->isVisible()) {
+                worker->setBoardId(ui->boardIdSpinBox->value());
+            }
+
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
             // Hook up text from worker to label

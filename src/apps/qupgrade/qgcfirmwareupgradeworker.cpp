@@ -12,6 +12,7 @@
 QGCFirmwareUpgradeWorker::QGCFirmwareUpgradeWorker(QObject *parent) :
     QObject(parent),
     _abortUpload(false),
+    _filterBoardId(5),
     port(NULL)
 {
 }
@@ -60,6 +61,11 @@ void QGCFirmwareUpgradeWorker::detect()
 {
     
 
+}
+
+
+void QGCFirmwareUpgradeWorker::setBoardId(int id) {
+    _filterBoardId = id;
 }
 
 void QGCFirmwareUpgradeWorker::setFilename(const QString &filename)
@@ -125,7 +131,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             //            QString humanReadable;
             //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
 
-            int ret = uploader.upload(filename);
+            int ret = uploader.upload(filename, _filterBoardId);
 
             port->close();
 

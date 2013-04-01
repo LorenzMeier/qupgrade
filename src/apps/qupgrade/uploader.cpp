@@ -191,10 +191,14 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
 }
 
 int
-PX4_Uploader::upload(const QString& filename, bool insync)
+PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 {
-    // XXX hardcoded for FMU 1.x for testing
+    // magic number, 5 = PX4FMU 1.x
+    // if not a .bin, but a .px4 file is loaded
+    // this ID is anyway overwritten by the ID stored in the file.
     unsigned int checkBoardId = 5;
+    if (filterId > 0)
+        checkBoardId = filterId;
     unsigned int checkBoardMinRev = 0;
     unsigned int checkBoardMaxRev = 99;
     bool tempfile = false;
@@ -401,7 +405,7 @@ PX4_Uploader::upload(const QString& filename, bool insync)
                     log("found bootloader revision: %d", bl_rev);
                 } else {
                     log("found unsupported bootloader revision %d, exiting", bl_rev);
-                    return OK;
+                    return -1;
                 }
             }
 
@@ -412,7 +416,7 @@ PX4_Uploader::upload(const QString& filename, bool insync)
                     log("found board ID: %d", board_id);
                 } else {
                     log("found unsupported board ID %d, exiting", board_id);
-                    return OK;
+                    return -1;
                 }
             }
 
