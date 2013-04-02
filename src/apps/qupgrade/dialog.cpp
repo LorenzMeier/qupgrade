@@ -53,7 +53,6 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->homeButton, SIGNAL(clicked()), this, SLOT(onHomeRequested()));
 
     connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
-    connect(ui->browserCheckBox, SIGNAL(clicked(bool)), ui->webView, SLOT(setVisible(bool)));
 
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
@@ -108,6 +107,10 @@ void Dialog::onToggleAdvancedMode(bool enabled)
     ui->portLabel->setVisible(enabled);
     ui->boardIdLabel->setVisible(enabled);
     ui->boardIdSpinBox->setVisible(enabled);
+    // Hide web view if advanced
+    ui->webView->setVisible(!enabled);
+    ui->homeButton->setVisible(!enabled);
+    ui->prevButton->setVisible(!enabled);
 }
 
 void Dialog::loadSettings()
@@ -115,10 +118,8 @@ void Dialog::loadSettings()
     QSettings set;
     lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
-    ui->browserCheckBox->setChecked(set.value("BROWSER_MODE", true).toBool());
     ui->boardIdSpinBox->setValue(set.value("BOARD_ID", 5).toInt());
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
-    ui->webView->setVisible(ui->browserCheckBox->isChecked());
 }
 
 void Dialog::storeSettings()
@@ -127,7 +128,6 @@ void Dialog::storeSettings()
     if (lastFilename != "")
         set.setValue("LAST_FILENAME", lastFilename);
     set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
-    set.setValue("BROWSER_MODE", ui->browserCheckBox->isChecked());
     set.setValue("BOARD_ID", ui->boardIdSpinBox->value());
 }
 
