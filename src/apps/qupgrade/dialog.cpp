@@ -63,14 +63,7 @@ Dialog::Dialog(QWidget *parent) :
     const int screenWidth = QApplication::desktop()->width();
     const int screenHeight = QApplication::desktop()->height();
 
-    if (screenWidth < 1200)
-    {
-        showFullScreen();
-    }
-    else
-    {
-        resize(700, qMin(screenHeight, 750));
-    }
+    resize(700, qMin(screenHeight, 750));
 
     // about:blank shouldn't be part of the history
     ui->webView->history()->clear();
