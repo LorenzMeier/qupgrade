@@ -60,9 +60,9 @@ Dialog::Dialog(QWidget *parent) :
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 
     // Adjust the size
-    const int screenHeight = QApplication::desktop()->height();
+    const int screenHeight = qMin(1000, QApplication::desktop()->height() - 100);
 
-    resize(700, qMin(screenHeight, 750));
+    resize(700, qMax(screenHeight, 550));
 
     // about:blank shouldn't be part of the history
     ui->webView->history()->clear();
