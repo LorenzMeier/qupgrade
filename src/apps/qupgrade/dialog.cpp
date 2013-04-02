@@ -60,7 +60,6 @@ Dialog::Dialog(QWidget *parent) :
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 
     // Adjust the size
-    const int screenWidth = QApplication::desktop()->width();
     const int screenHeight = QApplication::desktop()->height();
 
     resize(700, qMin(screenHeight, 750));
