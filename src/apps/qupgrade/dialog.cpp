@@ -115,7 +115,7 @@ void Dialog::loadSettings()
     QSettings set;
     lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
-    ui->browserCheckBox->setChecked(set.value("BROWSER_MODE", false).toBool());
+    ui->browserCheckBox->setChecked(set.value("BROWSER_MODE", true).toBool());
     ui->boardIdSpinBox->setValue(set.value("BOARD_ID", 5).toInt());
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
     ui->webView->setVisible(ui->browserCheckBox->isChecked());
