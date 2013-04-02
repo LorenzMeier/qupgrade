@@ -133,8 +133,6 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
             int ret = uploader.upload(filename, _filterBoardId);
 
-            port->close();
-
             // bail out on success
             if (ret == 0) {
                 emit loadFinished(true);

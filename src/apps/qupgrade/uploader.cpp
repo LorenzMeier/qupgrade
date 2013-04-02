@@ -512,7 +512,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
     }
 
     if (_io_fd->bytesAvailable() < 1) {
-        log("poll timeout");
+        //log("poll timeout");
         return -ETIMEDOUT;
     } else {
         QByteArray arr = _io_fd->read(1);
@@ -543,7 +543,7 @@ PX4_Uploader::drain()
 	int ret;
 
 	do {
-		ret = recv(c, 1000);
+        ret = recv(c, 100);
 
 		if (ret == OK) {
 			//log("discard 0x%02x", c);
