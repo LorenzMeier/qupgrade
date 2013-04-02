@@ -104,8 +104,8 @@ win32-msvc2008|win32-msvc2010 {
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\debug\\files" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\platforms\\" /E /I $$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Cored.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Guid.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Networkd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
@@ -136,8 +136,8 @@ win32-msvc2008|win32-msvc2010 {
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\release\\files" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\plugins\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\release\\platforms\\" /E /I $$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\release\\platforms\\" /E /I $$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Core.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Gui.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Network.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))

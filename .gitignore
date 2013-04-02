@@ -21,3 +21,6 @@ ui_dialog.h
 *.o
 moc*
 qupgrade
+*.exe
+*.dmg
+*.zip
