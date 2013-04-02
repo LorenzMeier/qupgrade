@@ -97,11 +97,14 @@ win32-msvc2008|win32-msvc2010 {
         # Copy dependencies
         BASEDIR_WIN = $$replace(BASEDIR,"/","\\")
         TARGETDIR_WIN = $$replace(TARGETDIR,"/","\\")
-        QTDIR_WIN = "C:\Qt\Qt5.0.1-VS\5.0.1\msvc2010"
+        QTDIR_WIN = "C:\Qt\Qt5.0.1\5.0.1\msvc2010"
 
         CONFIG(debug, debug|release) {
                 # Copy files
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\debug\\files" /E /I $$escape_expand(\\n))
+
+                # Copy Qt plugins
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\debug" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\platforms\\" /E /I $$escape_expand(\\n))
@@ -134,6 +137,9 @@ win32-msvc2008|win32-msvc2010 {
         CONFIG(release, debug|release) {
                 # Copy files
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\release\\files" /E /I $$escape_expand(\\n))
+
+                # Copy Qt plugins
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\release" /E /I $$escape_expand(\\n))
 
                 # Copy Qt DLLs
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\release\\platforms\\" /E /I $$escape_expand(\\n))
