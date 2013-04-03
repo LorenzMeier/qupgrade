@@ -106,13 +106,6 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="6">
-        <widget class="QProgressBar" name="upgradeProgressBar">
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0" colspan="8">
         <widget class="QPlainTextEdit" name="upgradeLog">
          <property name="readOnly">
@@ -144,6 +137,13 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="7">
+        <widget class="QProgressBar" name="upgradeProgressBar">
+         <property name="value">
+          <number>0</number>
          </property>
         </widget>
        </item>

@@ -118,9 +118,11 @@ PX4_Uploader::PX4_Uploader(QextSerialPort* port, QObject *parent) : QObject(pare
     boardNames.append("Three");
     boardNames.append("Four");
     boardNames.append("PX4FMU v1.x");
-    boardNames.append("Six");
-    boardNames.append("Seven");
+    boardNames.append("PX4FLOW v1.x");
+    boardNames.append("PX4IO v1.x");
     boardNames.append("Eight");
+    boardNames.append("Nine");
+    boardNames.append("Ten");
 
     // Create serial port instance
 
@@ -161,7 +163,7 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
         ret = get_info(INFO_BOARD_ID, board_id);
 
         if (ret == OK) {
-            log("found board ID: %d", board_id);
+            log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
         } else {
             log("failed getting board ID");
         }
@@ -421,7 +423,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
             if (ret == OK) {
                 if (board_id == checkBoardId) {
-                    log("found board ID: %d", board_id);
+                    log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
                 } else {
                     log("found unsupported board ID %d, exiting", board_id);
                     return -1;
