@@ -491,6 +491,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 	}
 
     _fw_fd.close();
+    // Close port
+    _io_fd->close();
 
     if (tempfile) {
         qDebug() << "Deleting" << _fw_fd.fileName();
