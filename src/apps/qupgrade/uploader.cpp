@@ -476,9 +476,9 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 			continue;
 		}
 
-		if (bl_rev <= 2)
+		if (bl_rev <= 2) {
 			ret = verify_rev2(fw_size);
-		else if(bl_rev == 3) {
+		} else {
 			ret = verify_rev3(fw_size);
 		}
 
@@ -713,11 +713,11 @@ PX4_Uploader::program(size_t fw_size)
         if (bl_rev == 2) {
             /* expect slower verify for bootloader rev 2 */
             emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*45.0f));
-        } else if (bl_rev == 3) {
-            /* expect fast verify for bootloader rev 3 */
+        } else if (bl_rev == 3 || bl_rev == 4) {
+            /* expect fast verify for bootloader rev 3 and 4*/
             emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*80.0f));
         } else {
-            log("progress bar update for this bootloader revision not supported");
+            log("progress bar update for bootloader revision %d not supported", bl_rev);
         }
 	}
 	return OK;
