@@ -20,7 +20,7 @@ debug
 ui_dialog.h
 *.o
 moc*
-qupgrade
+./qupgrade
 *.exe
 *.dmg
 *.zip
