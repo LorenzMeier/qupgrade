@@ -206,9 +206,14 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 	int	ret;
 	size_t fw_size;
 
-    if (_io_fd->isOpen() || !_io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
-        log("could not open interface");
-        return -1;
+    if (!_io_fd->isOpen()) {
+        _io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+
+        // If still not open, complain and exit
+        if (!_io_fd->isOpen()) {
+            log("could not open interface");
+            return -1;
+        }
     }
 
     /* look for the bootloader */
@@ -403,6 +408,9 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
             if (ret == OK) {
                 if (bl_rev <= BL_REV) {
                     log("found bootloader revision: %d", bl_rev);
+                    if (bl_rev < 3) {
+                        log("Bootloader v2 is slow, consider upgrading:\nhttps://pixhawk.ethz.ch/px4/users/bootloader_update");
+                    }
                 } else {
                     log("found unsupported bootloader revision %d, exiting", bl_rev);
                     return -1;
@@ -473,7 +481,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 		}
 
 		if (ret != OK) {
-			log("verify failed");
+            log("verify failed, please reset the board and retry.");
 			continue;
 		}
 
@@ -529,7 +537,7 @@ int
 PX4_Uploader::recv(uint8_t *p, unsigned count)
 {
 	while (count--) {
-		int ret = recv(*p++, 5000);
+        int ret = recv(*p++, 5000);
 
 		if (ret != OK)
 			return ret;
@@ -545,7 +553,7 @@ PX4_Uploader::drain()
 	int ret;
 
 	do {
-        ret = recv(c, 100);
+        ret = recv(c, 1000);
 
 		if (ret == OK) {
 			//log("discard 0x%02x", c);

@@ -43,7 +43,7 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
     connect(ui->flashButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
     connect(ui->selectFileButton, SIGNAL(clicked()), SLOT(onFileSelectRequested()));
-    connect(ui->cancelButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
+    connect(ui->cancelButton, SIGNAL(clicked()), SLOT(onCancelButtonClicked()));
 
     connect(ui->webView->page(), SIGNAL(downloadRequested(const QNetworkRequest&)), this, SLOT(onDownloadRequested(const QNetworkRequest&)));
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
@@ -308,6 +308,17 @@ void Dialog::onFileSelectRequested()
         lastFilename = fileName;
 }
 
+void Dialog::onCancelButtonClicked()
+{
+    if (loading) {
+        worker->abortUpload();
+        loading = false;
+        ui->flashButton->setText(tr("Flash"));
+    }
+
+    ui->cancelButton->setEnabled(false);
+}
+
 void Dialog::onUploadButtonClicked()
 {
     if (loading) {
@@ -360,6 +371,7 @@ void Dialog::onLoadFinished(bool success)
 {
     loading = false;
     ui->flashButton->setText(tr("Flash"));
+    ui->cancelButton->setEnabled(false);
 
     if (success) {
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));

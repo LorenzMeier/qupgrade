@@ -37,6 +37,7 @@ public slots:
 private slots:
     void onPortNameChanged(const QString &name);
     void onFileSelectRequested();
+    void onCancelButtonClicked();
     void onUploadButtonClicked();
     void onDownloadFinished();
     void onDownloadRequested(const QNetworkRequest &request);

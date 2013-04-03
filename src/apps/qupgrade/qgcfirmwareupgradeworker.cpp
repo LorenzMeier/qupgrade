@@ -81,63 +81,75 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
     while (!_abortUpload) {
 
-        SLEEP::usleep(100000);
+        SLEEP::usleep(200000);
 
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
 
         foreach (QextPortInfo info, ports) {
 
-            if (!(info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */))
+            // Check for valid handles
+            if (info.portName.isEmpty())
                 continue;
 
-            qDebug() << "port name:"       << info.portName;
-            qDebug() << "friendly name:"   << info.friendName;
-            qDebug() << "physical name:"   << info.physName;
-            qDebug() << "enumerator name:" << info.enumName;
-            qDebug() << "vendor ID:"       << info.vendorID;
-            qDebug() << "product ID:"      << info.productID;
+            if (info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */) {
 
-            qDebug() << "===================================";
+                qDebug() << "port name:"       << info.portName;
+                qDebug() << "friendly name:"   << info.friendName;
+                qDebug() << "physical name:"   << info.physName;
+                qDebug() << "enumerator name:" << info.enumName;
+                qDebug() << "vendor ID:"       << info.vendorID;
+                qDebug() << "product ID:"      << info.productID;
 
-            QString openString = info.portName;
+                qDebug() << "===================================";
 
-            qDebug() << "UPLOAD ATTEMPT";
+                QString openString = info.portName;
 
-            // Spawn upload thread
+                qDebug() << "UPLOAD ATTEMPT";
 
-            if (port == NULL) {
-                PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
+                // Spawn upload thread
 
-                port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
-                port->setTimeout(0);
-                port->setQueryMode(QextSerialPort::Polling);
+                if (port == NULL) {
+                    PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
+
+                    port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
+                    port->setTimeout(0);
+                    port->setQueryMode(QextSerialPort::Polling);
+                } else {
+                    port->close();
+                    port->setPortName(openString);
+                }
+
+                PX4_Uploader uploader(port);
+                // Relay status to top-level UI
+                connect(&uploader, SIGNAL(upgradeProgressChanged(int)), this, SIGNAL(upgradeProgressChanged(int)));
+                connect(&uploader, SIGNAL(upgradeStatusChanged(QString)), this, SIGNAL(upgradeStatusChanged(QString)));
+
+                // Die-hard flash the binary
+                emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+
+                //            quint32 board_id;
+                //            quint32 board_rev;
+                //            quint32 flash_size;
+                //            bool insync = false;
+                //            QString humanReadable;
+                //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
+
+                int ret = uploader.upload(filename, _filterBoardId);
+
+                // bail out on success
+                if (ret == 0) {
+                    emit loadFinished(true);
+                    emit finished();
+                    return;
+                }
+            } else if (info.physName.contains("3DR Radio") || info.vendorID == 9900 /* 3DR */) {
+
             } else {
-                port->close();
-                port->setPortName(openString);
-            }
+                // Attempt to scan for devices attached via FTDI, e.g. 3DR Radios
 
-            PX4_Uploader uploader(port);
-            // Relay status to top-level UI
-            connect(&uploader, SIGNAL(upgradeProgressChanged(int)), this, SIGNAL(upgradeProgressChanged(int)));
-            connect(&uploader, SIGNAL(upgradeStatusChanged(QString)), this, SIGNAL(upgradeStatusChanged(QString)));
+                // Instantiate 3DR radio uploader
 
-            // Die-hard flash the binary
-            emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
-
-            //            quint32 board_id;
-            //            quint32 board_rev;
-            //            quint32 flash_size;
-            //            bool insync = false;
-            //            QString humanReadable;
-            //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
-
-            int ret = uploader.upload(filename, _filterBoardId);
-
-            // bail out on success
-            if (ret == 0) {
-                emit loadFinished(true);
-                emit finished();
-                return;
+                // XXX needs checking for type of firmware file
             }
         }
     }
