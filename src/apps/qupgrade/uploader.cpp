@@ -145,7 +145,7 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
 
             if (ret != OK) {
                 /* this is immediately fatal */
-                log("bootloader not responding");
+                log("bootloader not responding (reset to enter bootloader)");
                 return -EIO;
             }
         }

@@ -1,7 +1,7 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class Dialog;
@@ -13,7 +13,7 @@ class QGCFirmwareUpgradeWorker;
 class QNetworkRequest;
 class QNetworkReply;
 
-class Dialog : public QDialog
+class Dialog : public QWidget
 {
     Q_OBJECT
 

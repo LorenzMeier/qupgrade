@@ -21,7 +21,7 @@
 #include "qgcfirmwareupgradeworker.h"
 
 Dialog::Dialog(QWidget *parent) :
-    QDialog(parent),
+    QWidget(parent),
     loading(false),
     ui(new Ui::Dialog)
 {
@@ -81,7 +81,7 @@ Dialog::~Dialog()
 
 void Dialog::changeEvent(QEvent *e)
 {
-    QDialog::changeEvent(e);
+    QWidget::changeEvent(e);
     switch (e->type()) {
     case QEvent::LanguageChange:
         ui->retranslateUi(this);
@@ -112,6 +112,11 @@ void Dialog::loadSettings()
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
     ui->boardIdSpinBox->setValue(set.value("BOARD_ID", 5).toInt());
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
+
+    // Check if in advanced mode
+    if (!lastFilename.isEmpty() && ui->advancedCheckBox->isChecked()) {
+        ui->upgradeLog->appendPlainText(tr("Pre-selected file %1\nfor flashing (click 'Flash' to upgrade)").arg(lastFilename));
+    }
 }
 
 void Dialog::storeSettings()
