@@ -28,9 +28,11 @@ protected:
     void changeEvent(QEvent *e);
     void loadSettings();
     void storeSettings();
+    void updateBoardId(const QString &fileName);
 
 public slots:
     void onPortAddedOrRemoved();
+    void onLoadStart();
     void onLoadFinished(bool success);
     void onDownloadProgress(qint64 curr, qint64 total);
 

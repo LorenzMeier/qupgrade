@@ -17,13 +17,16 @@ QGCFirmwareUpgradeWorker::QGCFirmwareUpgradeWorker(QObject *parent) :
 {
 }
 
-QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QString &filename)
+QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QString &filename, const QString &port, int boardId)
 {
     QGCFirmwareUpgradeWorker *worker = NULL;
     QThread *thread = NULL;
 
     worker = new QGCFirmwareUpgradeWorker;
     worker->setFilename(filename);
+    worker->setPort(port);
+    if (boardId >= 0)
+        worker->setBoardId(boardId);
     thread = new QThread;
 
     worker->moveToThread(thread);
@@ -68,6 +71,14 @@ void QGCFirmwareUpgradeWorker::setBoardId(int id) {
     _filterBoardId = id;
 }
 
+void QGCFirmwareUpgradeWorker::setPort(const QString &port) {
+    if (port.contains("Automatic")) {
+        _fixedPortName = "";
+    } else {
+        _fixedPortName = port;
+    }
+}
+
 void QGCFirmwareUpgradeWorker::setFilename(const QString &filename)
 {
     this->filename = filename;
@@ -91,7 +102,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
             if (info.portName.isEmpty())
                 continue;
 
-            if (info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */) {
+            if ((filename.endsWith(".bin") || filename.endsWith(".px4")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
+                    (info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)))) {
 
                 qDebug() << "port name:"       << info.portName;
                 qDebug() << "friendly name:"   << info.friendName;
@@ -114,6 +126,9 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                     port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
                     port->setTimeout(0);
                     port->setQueryMode(QextSerialPort::Polling);
+                    // XXX black magic to convince Qextserialport to cooperate on first attempt
+                    port->close();
+                    port->setPortName(openString);
                 } else {
                     port->close();
                     port->setPortName(openString);
@@ -125,7 +140,12 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                 connect(&uploader, SIGNAL(upgradeStatusChanged(QString)), this, SIGNAL(upgradeStatusChanged(QString)));
 
                 // Die-hard flash the binary
-                emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+
+                if ((info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)) {
+                    emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+                } else {
+                    emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName));
+                }
 
                 //            quint32 board_id;
                 //            quint32 board_rev;
@@ -142,21 +162,16 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                     emit finished();
                     return;
                 }
-            } else if (info.physName.contains("3DR Radio") || info.vendorID == 9900 /* 3DR */) {
+            } else if ((filename.endsWith(".ihx") || filename.endsWith(".ihex") || filename.endsWith(".hex")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
+                                  (info.physName.contains("3DR Radio") || info.vendorID == 9900 /* 3DR */)))) {
 
-            } else {
-                // Attempt to scan for devices attached via FTDI, e.g. 3DR Radios
-
-                // Instantiate 3DR radio uploader
-
-                // XXX needs checking for type of firmware file
             }
         }
     }
 
     _abortUpload = false;
     emit loadFinished(false);
-    emit finished();
+    this->deleteLater();
 
 }
 

@@ -9,7 +9,7 @@ class QGCFirmwareUpgradeWorker : public QObject
     Q_OBJECT
 public:
     explicit QGCFirmwareUpgradeWorker(QObject *parent = 0);
-    static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename);
+    static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename, const QString &port="", int boardId=0);
 
 signals:
     void detectionStatusChanged(const QString& status);
@@ -60,6 +60,12 @@ public slots:
     void setBoardId(int id);
 
     /**
+     * @brief Set a fixed port name, do not perform automatic scanning
+     * @param port
+     */
+    void setPort(const QString &port);
+
+    /**
      * @brief Abort upgrade worker
      */
     void abort();
@@ -70,6 +76,7 @@ protected:
 private:
     bool _abortUpload;
     int _filterBoardId;
+    QString _fixedPortName;
     QextSerialPort *port;
     QString filename;
 };

@@ -223,7 +223,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
     if (ret != OK) {
         /* this is immediately fatal */
-        log("bootloader not responding");
+        log("bootloader not responding (reset to enter bootloader)");
         return ret;
     }
 
@@ -425,7 +425,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 		}
 
 		if (ret != OK) {
-            log("verify failed, please reset the board and retry.");
+            log("verify failed, please reset the board to retry..");
 			continue;
 		}
 
@@ -516,7 +516,7 @@ PX4_Uploader::send(uint8_t c)
         _io_fd->flush();
     }
 
-	return OK;
+    return OK;
 }
 
 int
@@ -713,10 +713,12 @@ PX4_Uploader::verify_rev2(size_t fw_size)
 		send(count);
 		send(PROTO_EOC);
 
+        // XXX read more than one byte here
+
         for (int i = 0; i < count; i++) {
 			uint8_t c;
 
-			ret = recv(c, 5000);
+            ret = recv(c, 5000);
 
 			if (ret != OK) {
 				log("%d: got %d waiting for bytes", sent + i, ret);

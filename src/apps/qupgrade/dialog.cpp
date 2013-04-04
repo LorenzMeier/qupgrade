@@ -28,7 +28,8 @@ Dialog::Dialog(QWidget *parent) :
     ui->setupUi(this);
 
     foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        ui->portBox->addItem(info.portName);
+        if (!info.portName.isEmpty())
+            ui->portBox->addItem(info.portName);
     //make sure user can input their own port name!
     ui->portBox->setEditable(true);
 
@@ -78,6 +79,13 @@ Dialog::Dialog(QWidget *parent) :
 
     // load settings
     loadSettings();
+
+    // Set up initial state
+    if (!lastFilename.isEmpty()) {
+        ui->flashButton->setEnabled(true);
+    } else {
+        ui->flashButton->setEnabled(false);
+    }
 }
 
 Dialog::~Dialog()
@@ -120,15 +128,23 @@ void Dialog::loadSettings()
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
 
     int boardIndex = ui->boardComboBox->findData(set.value("BOARD_ID", 5));
-
     if (boardIndex >= 0)
         ui->boardComboBox->setCurrentIndex(boardIndex);
+
+    int portIndex = ui->portBox->findText(set.value("PORT_NAME", "").toString());
+    if (portIndex >= 0) {
+        ui->portBox->setCurrentIndex(portIndex);
+    } else {
+        qDebug() << "could not find port" << set.value("PORT_NAME", "");
+    }
 
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
 
     // Check if in advanced mode
     if (!lastFilename.isEmpty() && ui->advancedCheckBox->isChecked()) {
         ui->upgradeLog->appendPlainText(tr("Pre-selected file %1\nfor flashing (click 'Flash' to upgrade)").arg(lastFilename));
+
+        updateBoardId(lastFilename);
     }
 }
 
@@ -139,18 +155,42 @@ void Dialog::storeSettings()
         set.setValue("LAST_FILENAME", lastFilename);
     set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
     set.setValue("BOARD_ID", ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()));
+    set.setValue("PORT_NAME", ui->portBox->currentText());
+}
+
+void Dialog::updateBoardId(const QString &fileName) {
+    // XXX this should be moved in separe classes
+    if (fileName.endsWith(".px4")) {
+        // Attempt to decode JSON
+        QFile json(lastFilename);
+        json.open(QIODevice::ReadOnly | QIODevice::Text);
+        QByteArray jbytes = json.readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(jbytes);
+
+        if (doc.isNull()) {
+            // Error, bail out
+            ui->upgradeLog->appendPlainText(tr("supplied file is not a valid JSON document"));
+        }
+
+        QJsonObject px4 = doc.object();
+
+        int checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
+        ui->upgradeLog->appendPlainText(tr("loaded file for board ID %1").arg(checkBoardId));
+
+        // Set correct board ID
+        int index = ui->boardComboBox->findData(checkBoardId);
+
+        if (index >= 0) {
+            ui->boardComboBox->setCurrentIndex(index);
+        } else {
+            qDebug() << "Combo box: board not found:" << index;
+        }
+    }
 }
 
 void Dialog::onHomeRequested()
 {
     // Load start file into web view
-    // for some reason QWebView has substantiall issues with local files.
-    // Trick it by providing HTML directly.
-//    QFile html(QCoreApplication::applicationDirPath()+"/files/html/index.html");
-//    html.open(QIODevice::ReadOnly | QIODevice::Text);
-//    QString str = html.readAll();
-//    ui->webView->setHtml(str);
-//    ui->webView->history()->clear();
     ui->webView->setUrl(QUrl::fromUserInput(QCoreApplication::applicationDirPath()+"/files/html/index.html"));
     ui->homeButton->setEnabled(false);
     ui->prevButton->setEnabled(false);
@@ -158,8 +198,6 @@ void Dialog::onHomeRequested()
 
 void Dialog::onLinkClicked(const QUrl &url)
 {
-    qDebug() << "LINK" << url.toString();
-
     QString firmwareFile = QFileInfo(url.toString()).fileName();
 
     // If not a firmware file, ignore
@@ -169,8 +207,6 @@ void Dialog::onLinkClicked(const QUrl &url)
         ui->prevButton->setEnabled(true);
         return;
     }
-
-    qDebug() << "FW FILE:" << firmwareFile;
 
     QString filename;
 
@@ -213,8 +249,6 @@ void Dialog::onLinkClicked(const QUrl &url)
     // Pattern matched, abort current QWebView load
     ui->webView->stop();
 
-    qDebug() << "LASTFILENAME" << lastFilename;
-
     ui->upgradeLog->appendHtml(tr("Downloading firmware file <a href=\"%1\">%1</a>").arg(url.toString()));
 
     QNetworkRequest newRequest(url);
@@ -225,8 +259,6 @@ void Dialog::onLinkClicked(const QUrl &url)
     QNetworkReply *reply = networkManager->get(newRequest);
     connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
     connect(reply, SIGNAL(finished()), this, SLOT(onDownloadFinished()));
-//    connect(networkManager, SIGNAL(finished(QNetworkReply*)),
-//                SLOT(onDownloadFinished(QNetworkReply*)));
 }
 
 void Dialog::onDownloadRequested(const QNetworkRequest &request)
@@ -244,8 +276,6 @@ void Dialog::onPortNameChanged(const QString & /*name*/)
 
 void Dialog::onDownloadFinished()
 {
-    qDebug() << "DOWNLOAD FINISHED";
-
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
 
     if (!reply) {
@@ -254,10 +284,8 @@ void Dialog::onDownloadFinished()
     }
 
     if (loading) {
-        worker->abortUpload();
-        loading = false;
-        ui->flashButton->setText(tr("Flash"));
-        ui->cancelButton->setEnabled(false);
+        onCancelButtonClicked();
+        ui->upgradeLog->appendPlainText(tr("Waiting for firmware flashing to complete.."));
     } else {
 
         // Reset progress
@@ -287,9 +315,7 @@ void Dialog::onDownloadFinished()
 
         if (fileName.length() > 0) {
             // Got a filename, upload
-            loading = true;
-            ui->flashButton->setText(tr("Cancel"));
-            ui->cancelButton->setEnabled(true);
+            onLoadStart();
             lastFilename = fileName;
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
@@ -315,7 +341,7 @@ void Dialog::onFileSelectRequested()
     if (loading) {
         worker->abortUpload();
         loading = false;
-        ui->flashButton->setText(tr("Flash"));
+        ui->flashButton->setEnabled(true);
     }
 
     // Pick file
@@ -325,33 +351,7 @@ void Dialog::onFileSelectRequested()
     if (fileName != "") {
         lastFilename = fileName;
 
-        // XXX this should be moved in separe classes
-        if (lastFilename.endsWith(".px4")) {
-            // Attempt to decode JSON
-            QFile json(lastFilename);
-            json.open(QIODevice::ReadOnly | QIODevice::Text);
-            QByteArray jbytes = json.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(jbytes);
-
-            if (doc.isNull()) {
-                // Error, bail out
-                ui->upgradeLog->appendPlainText(tr("supplied file is not a valid JSON document"));
-            }
-
-            QJsonObject px4 = doc.object();
-
-            int checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
-            ui->upgradeLog->appendPlainText(tr("loaded file for board ID %1").arg(checkBoardId));
-
-            // Set correct board ID
-            int index = ui->boardComboBox->findData(checkBoardId);
-
-            if (index >= 0) {
-                ui->boardComboBox->setCurrentIndex(index);
-            } else {
-                qDebug() << "Combo box: board not found:" << index;
-            }
-        }
+        updateBoardId(lastFilename);
     }
 }
 
@@ -359,37 +359,36 @@ void Dialog::onCancelButtonClicked()
 {
     if (loading) {
         worker->abortUpload();
-        loading = false;
-        ui->flashButton->setText(tr("Flash"));
+        ui->cancelButton->setEnabled(false);
+        ui->upgradeLog->appendPlainText(tr("Waiting for last upgrade operaton to abort.."));
     }
-
-    ui->cancelButton->setEnabled(false);
 }
 
 void Dialog::onUploadButtonClicked()
 {
     if (loading) {
-        worker->abortUpload();
-        loading = false;
-        ui->flashButton->setText(tr("Flash"));
-        ui->cancelButton->setEnabled(false);
+        onCancelButtonClicked();
     } else {
 
         if (lastFilename.length() > 0) {
             // Got a filename, upload
             loading = true;
-            ui->flashButton->setText(tr("Cancel"));
+            ui->flashButton->setEnabled(false);
             ui->cancelButton->setEnabled(true);
 
-            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename);
+            int id = -1;
 
             // Set board ID for worker
             if (ui->boardComboBox->isVisible()) {
                 bool ok;
-                int id = ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()).toInt(&ok);
+                int tmp = ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()).toInt(&ok);
                 if (ok)
-                    worker->setBoardId(id);
+                    id = tmp;
             }
+
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id);
+
+            connect(ui->portBox, SIGNAL(currentTextChanged(QString)), worker, SLOT(setPort(QString)));
 
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
@@ -408,25 +407,47 @@ void Dialog::onPortAddedOrRemoved()
     QString current = ui->portBox->currentText();
 
     ui->portBox->blockSignals(true);
-    ui->portBox->clear();
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        ui->portBox->addItem(info.portName);
 
-    ui->portBox->setCurrentIndex(ui->portBox->findText(current));
+    // Delete old ports
+    for (int i = 0; i < ui->portBox->count(); i++)
+    {
+        bool found = false;
+        foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
+            if (info.portName == ui->portBox->itemText(i))
+                found = true;
+
+        if (!found && !ui->portBox->itemText(i).contains("Automatic"))
+            ui->portBox->removeItem(i);
+    }
+
+    // Add new ports
+    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
+        if (ui->portBox->findText(info.portName) < 0) {
+            if (!info.portName.isEmpty())
+                ui->portBox->addItem(info.portName);
+        }
 
     ui->portBox->blockSignals(false);
+}
+
+void Dialog::onLoadStart()
+{
+    loading = true;
+    ui->flashButton->setEnabled(false);
+    ui->cancelButton->setEnabled(true);
 }
 
 void Dialog::onLoadFinished(bool success)
 {
     loading = false;
-    ui->flashButton->setText(tr("Flash"));
+    ui->flashButton->setEnabled(true);
     ui->cancelButton->setEnabled(false);
 
     if (success) {
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));
     } else {
         ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
+        ui->upgradeProgressBar->setValue(0);
     }
 }
 
