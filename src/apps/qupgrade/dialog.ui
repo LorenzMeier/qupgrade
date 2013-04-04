@@ -26,21 +26,58 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,0,0,0,0,0,0,0">
-       <item row="1" column="7">
-        <widget class="QCheckBox" name="advancedCheckBox">
-         <property name="text">
-          <string>Advanced</string>
+      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,1,30,1,30,70,1,1,1">
+       <item row="3" column="0" colspan="9">
+        <widget class="QWebView" name="webView">
+         <property name="url">
+          <url>
+           <string>about:blank</string>
+          </url>
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="8">
-        <widget class="QPlainTextEdit" name="upgradeLog">
-         <property name="readOnly">
-          <bool>true</bool>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="selectFileButton">
+         <property name="text">
+          <string>Select File</string>
          </property>
-         <property name="maximumBlockCount">
-          <number>800</number>
+        </widget>
+       </item>
+       <item row="0" column="8">
+        <widget class="QPushButton" name="flashButton">
+         <property name="text">
+          <string>Flash</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="boardIdLabel">
+         <property name="text">
+          <string>Board</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="8">
+        <widget class="QPushButton" name="cancelButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="homeButton">
+         <property name="text">
+          <string>Home</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="8">
+        <widget class="QCheckBox" name="advancedCheckBox">
+         <property name="text">
+          <string>Advanced</string>
          </property>
         </widget>
        </item>
@@ -58,6 +95,25 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QComboBox" name="portBox">
+         <item>
+          <property name="text">
+           <string>&lt;Automatic&gt;</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="9">
+        <widget class="QPlainTextEdit" name="upgradeLog">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="maximumBlockCount">
+          <number>800</number>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="portLabel">
          <property name="text">
@@ -68,28 +124,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="selectFileButton">
-         <property name="text">
-          <string>Select File</string>
-         </property>
-        </widget>
+       <item row="0" column="4">
+        <widget class="QComboBox" name="boardComboBox"/>
        </item>
-       <item row="0" column="7">
-        <widget class="QPushButton" name="flashButton">
-         <property name="text">
-          <string>Flash</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="homeButton">
-         <property name="text">
-          <string>Home</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2" colspan="5">
+       <item row="1" column="5">
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -101,44 +139,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="5" column="7">
-        <widget class="QPushButton" name="cancelButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QLabel" name="boardIdLabel">
-         <property name="text">
-          <string>Board</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="8">
-        <widget class="QWebView" name="webView">
-         <property name="url">
-          <url>
-           <string>about:blank</string>
-          </url>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QComboBox" name="portBox">
-         <item>
-          <property name="text">
-           <string>&lt;Automatic&gt;</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QComboBox" name="boardComboBox"/>
        </item>
       </layout>
      </item>
