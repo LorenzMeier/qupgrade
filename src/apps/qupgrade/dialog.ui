@@ -26,17 +26,7 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,10,10,10,10,100,1,1">
-       <item row="5" column="7">
-        <widget class="QPushButton" name="cancelButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,0,0,0,0,0,0,0">
        <item row="1" column="7">
         <widget class="QCheckBox" name="advancedCheckBox">
          <property name="text">
@@ -44,17 +34,51 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="0" colspan="8">
+        <widget class="QPlainTextEdit" name="upgradeLog">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="maximumBlockCount">
+          <number>800</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="prevButton">
+         <property name="text">
+          <string>Back</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="7">
+        <widget class="QProgressBar" name="upgradeProgressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="portLabel">
+         <property name="text">
+          <string>Port:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="selectFileButton">
+         <property name="text">
+          <string>Select File</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="7">
         <widget class="QPushButton" name="flashButton">
          <property name="text">
           <string>Flash</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QLabel" name="boardIdLabel">
-         <property name="text">
-          <string>Board ID</string>
          </property>
         </widget>
        </item>
@@ -78,13 +102,21 @@
          </property>
         </spacer>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QComboBox" name="portBox">
-         <item>
-          <property name="text">
-           <string>&lt;Automatic&gt;</string>
-          </property>
-         </item>
+       <item row="5" column="7">
+        <widget class="QPushButton" name="cancelButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="boardIdLabel">
+         <property name="text">
+          <string>Board</string>
+         </property>
         </widget>
        </item>
        <item row="3" column="0" colspan="8">
@@ -96,56 +128,17 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QComboBox" name="portBox">
+         <item>
+          <property name="text">
+           <string>&lt;Automatic&gt;</string>
+          </property>
+         </item>
+        </widget>
+       </item>
        <item row="0" column="4">
-        <widget class="QSpinBox" name="boardIdSpinBox">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>5</number>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="8">
-        <widget class="QPlainTextEdit" name="upgradeLog">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="maximumBlockCount">
-          <number>800</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="prevButton">
-         <property name="text">
-          <string>Back</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="selectFileButton">
-         <property name="text">
-          <string>Select File</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="portLabel">
-         <property name="text">
-          <string>Port:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="7">
-        <widget class="QProgressBar" name="upgradeProgressBar">
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
+        <widget class="QComboBox" name="boardComboBox"/>
        </item>
       </layout>
      </item>

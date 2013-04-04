@@ -40,6 +40,14 @@ Dialog::Dialog(QWidget *parent) :
     enumerator = new QextSerialEnumerator(this);
     enumerator->setUpNotifications();
 
+    ui->boardComboBox->addItem("PX4FMU v1.6+", 5);
+    ui->boardComboBox->addItem("PX4FLOW v1.1+", 6);
+    ui->boardComboBox->addItem("PX4IO v1.3+", 7);
+    ui->boardComboBox->addItem("PX4 board #8", 8);
+    ui->boardComboBox->addItem("PX4 board #9", 9);
+    ui->boardComboBox->addItem("PX4 board #10", 10);
+    ui->boardComboBox->addItem("PX4 board #11", 11);
+
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
     connect(ui->flashButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
     connect(ui->selectFileButton, SIGNAL(clicked()), SLOT(onFileSelectRequested()));
@@ -98,7 +106,7 @@ void Dialog::onToggleAdvancedMode(bool enabled)
     ui->portBox->setVisible(enabled);
     ui->portLabel->setVisible(enabled);
     ui->boardIdLabel->setVisible(enabled);
-    ui->boardIdSpinBox->setVisible(enabled);
+    ui->boardComboBox->setVisible(enabled);
     // Hide web view if advanced
     ui->webView->setVisible(!enabled);
     ui->homeButton->setVisible(!enabled);
@@ -110,7 +118,12 @@ void Dialog::loadSettings()
     QSettings set;
     lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
-    ui->boardIdSpinBox->setValue(set.value("BOARD_ID", 5).toInt());
+
+    int boardIndex = ui->boardComboBox->findData(set.value("BOARD_ID", 5));
+
+    if (boardIndex >= 0)
+        ui->boardComboBox->setCurrentIndex(boardIndex);
+
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
 
     // Check if in advanced mode
@@ -125,7 +138,7 @@ void Dialog::storeSettings()
     if (lastFilename != "")
         set.setValue("LAST_FILENAME", lastFilename);
     set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
-    set.setValue("BOARD_ID", ui->boardIdSpinBox->value());
+    set.setValue("BOARD_ID", ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()));
 }
 
 void Dialog::onHomeRequested()
@@ -309,8 +322,37 @@ void Dialog::onFileSelectRequested()
     QString fileName = QFileDialog::getOpenFileName(this,
                             tr("Open Firmware File"), lastFilename, tr("Firmware Files (*.px4 *.bin)"));
 
-    if (fileName != "")
+    if (fileName != "") {
         lastFilename = fileName;
+
+        // XXX this should be moved in separe classes
+        if (lastFilename.endsWith(".px4")) {
+            // Attempt to decode JSON
+            QFile json(lastFilename);
+            json.open(QIODevice::ReadOnly | QIODevice::Text);
+            QByteArray jbytes = json.readAll();
+            QJsonDocument doc = QJsonDocument::fromJson(jbytes);
+
+            if (doc.isNull()) {
+                // Error, bail out
+                ui->upgradeLog->appendPlainText(tr("supplied file is not a valid JSON document"));
+            }
+
+            QJsonObject px4 = doc.object();
+
+            int checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
+            ui->upgradeLog->appendPlainText(tr("loaded file for board ID %1").arg(checkBoardId));
+
+            // Set correct board ID
+            int index = ui->boardComboBox->findData(checkBoardId);
+
+            if (index >= 0) {
+                ui->boardComboBox->setCurrentIndex(index);
+            } else {
+                qDebug() << "Combo box: board not found:" << index;
+            }
+        }
+    }
 }
 
 void Dialog::onCancelButtonClicked()
@@ -342,8 +384,11 @@ void Dialog::onUploadButtonClicked()
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename);
 
             // Set board ID for worker
-            if (ui->boardIdSpinBox->isVisible()) {
-                worker->setBoardId(ui->boardIdSpinBox->value());
+            if (ui->boardComboBox->isVisible()) {
+                bool ok;
+                int id = ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()).toInt(&ok);
+                if (ok)
+                    worker->setBoardId(id);
             }
 
             // Hook up status from worker to progress bar

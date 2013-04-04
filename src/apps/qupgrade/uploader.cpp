@@ -263,14 +263,6 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         // for the image string. Since its compressed / checksummed
         // this should be fine.
 
-//        QJsonValue img = px4.value(QString("image"));
-
-//        // Validate that we've got a string
-//        if (img.type() != QJsonValue::String) {
-//            log("firmware file of wrong type, aborting");
-//            return -1;
-//        }
-
         // Convert String to QByteArray and unzip it
         QByteArray raw;
         raw.clear();
@@ -282,11 +274,6 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         raw.append((unsigned char)((imageSize >> 8) & 0xFF));
         raw.append((unsigned char)((imageSize >> 0) & 0xFF));
 
-//        log("size: %02x %02x %02x %02x", (unsigned char)((imageSize >> 24) & 0xFF),
-//            (unsigned char)((imageSize >> 16) & 0xFF),
-//            (unsigned char)((imageSize >> 8) & 0xFF),
-//            (unsigned char)((imageSize >> 0) & 0xFF));
-
         QString j8(jbytes);
 
         QStringList list = j8.split("\"image\": \"");
@@ -296,51 +283,6 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         raw.append(QByteArray::fromBase64(raw64));
         QByteArray uncompressed = qUncompress(raw);
-
-//        log("raw: %02x %02x %02x %02x", (unsigned char)raw.at(4),
-//            (unsigned char)raw.at(5),
-//            (unsigned char)raw.at(6),
-//            (unsigned char)raw.at(7));
-
-//        qDebug() << "raw count" << raw.length() << "raw img str" << img.toString().length();
-
-//        QFile test("/Users/user/src/Firmware/Images/px4fmu.bin");
-
-//        test.open(QIODevice::ReadOnly);
-
-//        QByteArray testb = test.readAll();
-
-//        QByteArray testc = qCompress(testb, 9);
-//        QFile tout("/Users/user/Documents/px4test.txt");
-//        tout.open(QIODevice::WriteOnly);
-
-//        log("Qt size: %02x %02x %02x %02x", (unsigned char) testc.at(0),
-//            (unsigned char) testc.at(1), (unsigned char) testc.at(2), (unsigned char) testc.at(3));
-
-//        log("Qt raw: %02x %02x %02x %02x", (unsigned char)testc.at(4),
-//            (unsigned char)testc.at(5),
-//            (unsigned char)testc.at(6),
-//            (unsigned char)testc.at(7));
-
-//        QByteArray testd = testc.remove(0, 4);
-//        QByteArray test64 = testd.toBase64();
-//        log("base 64 len: %d", (int)test64.count());
-
-//        tout.write(test64);
-
-//        if (raw64.count() != test64.count()) {
-//            log("ERR: Size mismatch: raw64: %d, test64: %d", (int)raw64.count(), (int)test64.count());
-//        } else {
-
-//            for (int i = 0; i < test64.count(); i++)
-//            {
-//                if (raw64.at(i) != test64.at(i)) {
-//                    log("ERR: DIFF in data: %02x != %02x", raw64.at(i), test64.at(i));
-//                }
-//            }
-//        }
-
-//        qDebug() << "uncompressed size:" << uncompressed.count();
 
         QByteArray b = uncompressed;
 
