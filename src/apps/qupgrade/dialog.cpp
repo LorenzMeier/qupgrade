@@ -246,9 +246,6 @@ void Dialog::onLinkClicked(const QUrl &url)
     // Else, flash the firmware
     lastFilename = filename;
 
-    // Pattern matched, abort current QWebView load
-    ui->webView->stop();
-
     ui->upgradeLog->appendHtml(tr("Downloading firmware file <a href=\"%1\">%1</a>").arg(url.toString()));
 
     QNetworkRequest newRequest(url);
@@ -280,12 +277,13 @@ void Dialog::onDownloadFinished()
 
     if (!reply) {
         // bail out, nothing to do
+        ui->upgradeLog->appendPlainText("Download failed, invalid context");
         return;
     }
 
     if (loading) {
         onCancelButtonClicked();
-        ui->upgradeLog->appendPlainText(tr("Waiting for firmware flashing to complete.."));
+        ui->upgradeLog->appendPlainText(tr("Still flashing. Waiting for firmware flashing to complete.."));
     } else {
 
         // Reset progress
@@ -299,14 +297,12 @@ void Dialog::onDownloadFinished()
         // Store file in download location
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly)) {
-            fprintf(stderr, "Could not open %s for writing: %s\n",
-                    qPrintable(fileName),
-                    qPrintable(file.errorString()));
+            ui->upgradeLog->appendPlainText(tr("Could not open %s for writing: %s\n").arg(fileName).arg(file.errorString()));
             return;
         }
 
         file.write(reply->readAll());
-
+        file.close();
 
         if (lastFilename.contains("px4io")) {
             // Done, bail out
