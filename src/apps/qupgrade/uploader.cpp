@@ -216,6 +216,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
             log("could not open interface");
             return -1;
         }
+    } else {
+        log("opened port %s", _io_fd->portName());
     }
 
     /* look for the bootloader */
