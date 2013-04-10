@@ -217,7 +217,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
             return -1;
         }
     } else {
-        log("opened port %s", _io_fd->portName());
+        log("opened port %s", _io_fd->portName().toStdString().c_str());
     }
 
     /* look for the bootloader */
