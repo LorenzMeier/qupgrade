@@ -337,7 +337,6 @@ void Dialog::onFileSelectRequested()
     if (loading) {
         worker->abortUpload();
         loading = false;
-        ui->flashButton->setEnabled(true);
     }
 
     // Pick file
@@ -346,6 +345,7 @@ void Dialog::onFileSelectRequested()
 
     if (fileName != "") {
         lastFilename = fileName;
+        ui->flashButton->setEnabled(true);
 
         updateBoardId(lastFilename);
     }
