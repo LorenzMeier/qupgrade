@@ -14,6 +14,7 @@
 #include <QDesktopWidget>
 #include <QTimer>
 #include <QWebHistory>
+#include <QWebSettings>
 #include <QMessageBox>
 #include <QSettings>
 
@@ -54,8 +55,15 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->selectFileButton, SIGNAL(clicked()), SLOT(onFileSelectRequested()));
     connect(ui->cancelButton, SIGNAL(clicked()), SLOT(onCancelButtonClicked()));
 
+	// disable JavaScript for Windows for faster startup
+#ifdef Q_OS_WIN
+    QWebSettings *webViewSettings = ui->webView->settings();
+    webViewSettings->setAttribute(QWebSettings::JavascriptEnabled, false);
+#endif
+
     connect(ui->webView->page(), SIGNAL(downloadRequested(const QNetworkRequest&)), this, SLOT(onDownloadRequested(const QNetworkRequest&)));
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+
     connect(ui->webView->page(), SIGNAL(linkClicked(const QUrl&)), this, SLOT(onLinkClicked(const QUrl&)));
 
     connect(ui->prevButton, SIGNAL(clicked()), ui->webView, SLOT(back()));
@@ -220,9 +228,9 @@ void Dialog::onLinkClicked(const QUrl &url)
     } else {
 
         // Make sure the user doesn't screw up flashing
-        QMessageBox msgBox;
-        msgBox.setText("Please unplug your PX4 board now");
-        msgBox.exec();
+        //QMessageBox msgBox;
+        //msgBox.setText("Please unplug your PX4 board now");
+        //msgBox.exec();
 
         filename = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 
@@ -326,7 +334,7 @@ void Dialog::onDownloadFinished()
 
             // Make sure user gets the board going now
             QMessageBox msgBox;
-            msgBox.setText("Please connect your PX4 board now");
+            msgBox.setText("Please reset your PX4 board now (or unplug it and plug it back in)");
             msgBox.exec();
         }
     }
