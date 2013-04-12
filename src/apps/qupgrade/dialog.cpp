@@ -201,7 +201,7 @@ void Dialog::onHomeRequested()
     QString filesPath = QCoreApplication::applicationDirPath();
 
 #ifdef Q_OS_LINUX
-    if (QDir("/usr/share/qupgrade").exists() && QFile::exists("/usr/share/qupgrade/files/index.html")) {
+    if (QDir("/usr/share/qupgrade").exists() && QFile::exists("/usr/share/qupgrade/files/html/index.html")) {
          filesPath = "/usr/share/qupgrade/";
     }
 #endif
