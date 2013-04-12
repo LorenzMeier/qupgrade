@@ -334,7 +334,7 @@ void Dialog::onDownloadFinished()
 
             // Make sure user gets the board going now
             QMessageBox msgBox;
-            msgBox.setText("Please reset your PX4 board now (or unplug it and plug it back in)");
+            msgBox.setText("Please unplug your PX4 board now and plug it back in");
             msgBox.exec();
         }
     }
