@@ -26,4 +26,4 @@ qupgrade
 *.exe
 *.dmg
 *.zip
-
+*~
