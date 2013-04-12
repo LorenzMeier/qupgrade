@@ -22,6 +22,8 @@ ui_qupgrademainwindow.h
 *.o
 moc*
 qupgrade
+!src/apps/qupgrade
 *.exe
 *.dmg
 *.zip
+
