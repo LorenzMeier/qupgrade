@@ -198,8 +198,17 @@ void Dialog::updateBoardId(const QString &fileName) {
 
 void Dialog::onHomeRequested()
 {
+    QString filesPath = QCoreApplication::applicationDirPath();
+
+#ifdef Q_OS_LINUX
+    if (QDir("/usr/share/qupgrade").exists() && QFile::exists("/usr/share/qupgrade/files/index.html")) {
+         filesPath = "/usr/share/qupgrade/";
+    }
+#endif
+
     // Load start file into web view
-    ui->webView->setUrl(QUrl::fromUserInput(QCoreApplication::applicationDirPath()+"/files/html/index.html"));
+    ui->webView->setUrl(QUrl::fromUserInput(filesPath+"/files/html/index.html"));
+
     ui->homeButton->setEnabled(false);
     ui->prevButton->setEnabled(false);
 }
