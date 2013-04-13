@@ -164,7 +164,7 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
         ret = get_info(INFO_BOARD_ID, board_id);
 
         if (ret == OK) {
-            log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
+            log("found board ID: %d - %s", (int)board_id, (boardNames.size() > (int)board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
         } else {
             log("failed getting board ID");
         }
@@ -373,7 +373,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
             if (ret == OK) {
                 if (board_id == checkBoardId) {
-                    log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
+                    log("found board ID: %d - %s", static_cast<int>(board_id), (boardNames.size() > static_cast<int>(board_id)) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
                 } else {
                     log("found unsupported board ID %d, exiting", board_id);
 					_io_fd->close();

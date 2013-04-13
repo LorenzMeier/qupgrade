@@ -62,6 +62,7 @@ win32-msvc2008|win32-msvc2010 {
 # MAC OS X
 macx|macx-g++42|macx-g++|macx-llvm {
     QMAKE_POST_LINK += && cp -rf $$BASEDIR/files $$TARGETDIR/qupgrade.app/Contents/MacOS
+    ICON = $$BASEDIR/files/logo/qupgrade_logo.icns
 }
 
 
