@@ -116,6 +116,13 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
                 QString openString = info.portName;
 
+                // Stupid windows fixes
+#ifdef Q_OS_WIN
+                // Handle port names
+                openString.prepend("\\\\.\\");
+#endif
+
+
                 qDebug() << "UPLOAD ATTEMPT";
 
                 // Spawn upload thread

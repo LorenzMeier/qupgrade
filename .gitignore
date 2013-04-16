@@ -18,9 +18,12 @@ Makefile
 release
 debug
 ui_dialog.h
+ui_qupgrademainwindow.h
 *.o
 moc*
-./qupgrade
+qupgrade
+!src/apps/qupgrade
 *.exe
 *.dmg
 *.zip
+*~
