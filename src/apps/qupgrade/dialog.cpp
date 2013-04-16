@@ -400,8 +400,6 @@ void Dialog::onUploadButtonClicked()
 
 void Dialog::onPortAddedOrRemoved()
 {
-    QString current = ui->portBox->currentText();
-
     ui->portBox->blockSignals(true);
 
     // Delete old ports
