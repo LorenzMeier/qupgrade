@@ -132,6 +132,20 @@ PX4_Uploader::~PX4_Uploader()
 {
 }
 
+void PX4_Uploader::send_app_reboot()
+{
+    // Send command to start MAVLink
+    // XXX hacky but safe
+    // Start NSH
+    const char init[] = {0x0d, 0x0d, 0x0d};
+    _io_fd->write(init, sizeof(init));
+
+    // Reboot
+    char* cmd = "reboot\n";
+    _io_fd->write(cmd, strlen(cmd));
+    _io_fd->write(init, 2);
+}
+
 int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
 {
     int ret = -1;
@@ -147,7 +161,8 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
 
             if (ret != OK) {
                 /* this is immediately fatal */
-                log("bootloader not responding (reset to enter bootloader)");
+                log("bootloader not responding (attempting to reset..)");
+                send_app_reboot();
 				_io_fd->close();
                 return -EIO;
             }
@@ -226,7 +241,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
     if (ret != OK) {
         /* this is immediately fatal */
-        log("bootloader not responding (reset to enter bootloader)");
+        log("bootloader not responding (attempting to reset..)");
+        send_app_reboot();
 		_io_fd->close();
         return ret;
     }
@@ -348,7 +364,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
                 if (ret != OK) {
                     /* this is immediately fatal */
-                    log("bootloader not responding");
+                    log("bootloader not responding, please unplug and re-plug board");
 					_io_fd->close();
                     return -EIO;
                 }
