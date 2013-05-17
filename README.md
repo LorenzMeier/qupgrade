@@ -28,3 +28,19 @@ Firmware flashing tool
     cd qupgrade
     qmake
     make
+
+###Ubuntu 13.04
+
+    sudo apt-get install build-essential git-core
+    sudo apt-get install qt5-default qt5-qmake
+    sudo apt-get install libudev-dev libqt5webkit5-dev qtlocation5-dev qtsensors5-dev qtdeclarative5-dev
+   
+    sudo apt-get install libxslt1-dev libglib2.0 libgstreamer-plugins-base0.10-dev libsqlite3-dev
+    
+    cd ~
+    mkdir src
+    cd src
+    git clone https://github.com/LorenzMeier/qupgrade
+    cd qupgrade
+    qmake
+    make
