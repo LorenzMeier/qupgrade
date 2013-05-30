@@ -132,6 +132,20 @@ PX4_Uploader::~PX4_Uploader()
 {
 }
 
+void PX4_Uploader::send_app_reboot()
+{
+    // Send command to start MAVLink
+    // XXX hacky but safe
+    // Start NSH
+    const char init[] = {0x0d, 0x0d, 0x0d};
+    _io_fd->write(init, sizeof(init));
+
+    // Reboot
+    char* cmd = "reboot\n";
+    _io_fd->write(cmd, strlen(cmd));
+    _io_fd->write(init, 2);
+}
+
 int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
 {
     int ret = -1;
@@ -147,7 +161,9 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
 
             if (ret != OK) {
                 /* this is immediately fatal */
-                log("bootloader not responding (reset to enter bootloader)");
+                log("bootloader not responding (attempting to reset..)");
+                send_app_reboot();
+				_io_fd->close();
                 return -EIO;
             }
         }
@@ -163,7 +179,7 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
         ret = get_info(INFO_BOARD_ID, board_id);
 
         if (ret == OK) {
-            log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
+            log("found board ID: %d - %s", (int)board_id, (boardNames.size() > (int)board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
         } else {
             log("failed getting board ID");
         }
@@ -225,7 +241,9 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
     if (ret != OK) {
         /* this is immediately fatal */
-        log("bootloader not responding (reset to enter bootloader)");
+        log("bootloader not responding (attempting to reset..)");
+        send_app_reboot();
+		_io_fd->close();
         return ret;
     }
 
@@ -240,6 +258,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         if (doc.isNull()) {
             // Error, bail out
             log("supplied file is not a valid JSON document");
+			_io_fd->close();
             return -1;
         }
 
@@ -292,6 +311,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         if (b.count() == 0 || b.count() != imageSize) {
             log("firmware file invalid, aborting");
+			_io_fd->close();
             return -1;
         }
 
@@ -344,7 +364,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
                 if (ret != OK) {
                     /* this is immediately fatal */
-                    log("bootloader not responding");
+                    log("bootloader not responding, please unplug and re-plug board");
+					_io_fd->close();
                     return -EIO;
                 }
             }
@@ -359,6 +380,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
                     }
                 } else {
                     log("found unsupported bootloader revision %d, exiting", bl_rev);
+					_io_fd->close();
                     return -1;
                 }
             }
@@ -367,9 +389,10 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
             if (ret == OK) {
                 if (board_id == checkBoardId) {
-                    log("found board ID: %d - %s", board_id, (boardNames.size() > board_id) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
+                    log("found board ID: %d - %s", static_cast<int>(board_id), (boardNames.size() > static_cast<int>(board_id)) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
                 } else {
                     log("found unsupported board ID %d, exiting", board_id);
+					_io_fd->close();
                     return -1;
                 }
             }
@@ -382,6 +405,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
                     log("board rev: %d", board_rev);
                 } else {
                     log("unsupported board rev (%d), exiting", board_rev);
+					_io_fd->close();
                     return OK;
                 }
             }
@@ -394,6 +418,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
                     log("flash size: %d bytes (%4.1f MiB)", flash_size, flash_size / (1024.0f * 1024.0f));
                 } else {
                     log("not enough flash size (%d bytes avail, %d needed), exiting", flash_size, fw_size);
+					_io_fd->close();
                     return OK;
                 }
             }
@@ -435,10 +460,13 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
 		if (ret != OK) {
 			log("reboot failed");
+			_io_fd->close();
 			return ret;
 		}
 		
         log("update complete (time: %.2f s)", 1e-3f*(float)(QGC::groundTimeMilliseconds() - startUploadTime));
+
+		_io_fd->close();
 
 		ret = OK;
 		break;

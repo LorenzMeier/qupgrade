@@ -62,6 +62,7 @@ win32-msvc2008|win32-msvc2010 {
 # MAC OS X
 macx|macx-g++42|macx-g++|macx-llvm {
     QMAKE_POST_LINK += && cp -rf $$BASEDIR/files $$TARGETDIR/qupgrade.app/Contents/MacOS
+    ICON = $$BASEDIR/files/logo/qupgrade_logo.icns
 }
 
 
@@ -77,8 +78,8 @@ win32-msvc2008|win32-msvc2010 {
 
         # Specify multi-process compilation within Visual Studio.
         # (drastically improves compilation times for multi-core computers)
-        QMAKE_CXXFLAGS_DEBUG += -MP
-        QMAKE_CXXFLAGS_RELEASE += -MP
+        QMAKE_CXXFLAGS_DEBUG += -MP -openssl-linked
+        QMAKE_CXXFLAGS_RELEASE += -MP -openssl-linked
 
         # Specify the inclusion of (U)INT*_(MAX/MIN) macros within Visual Studio
         DEFINES += __STDC_LIMIT_MACROS
@@ -101,17 +102,17 @@ win32-msvc2008|win32-msvc2010 {
         BASEDIR_WIN = $$replace(BASEDIR,"/","\\")
         TARGETDIR_WIN = $$replace(TARGETDIR,"/","\\")
         QTDIR_WIN = "C:\Qt\Qt5.0.1\5.0.1\msvc2010"
+        #OpenSSL from: http://slproweb.com/products/Win32OpenSSL.html
+        OPENSSLDIR_WIN = "C:\OpenSSL-Win32"
 
         CONFIG(debug, debug|release) {
                 # Copy files
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\debug\\files" /E /I $$escape_expand(\\n))
 
-                # Copy Qt plugins
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\debug" /E /I $$escape_expand(\\n))
-
                 # Copy Qt DLLs
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimald.dll" "$$TARGETDIR_WIN\\debug\\platforms\\" /E /I $$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindowsd.dll" "$$TARGETDIR_WIN\\debug\\platforms\\" /E /I $$escape_expand(\\n))
+
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Cored.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Guid.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Networkd.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
@@ -132,21 +133,24 @@ win32-msvc2008|win32-msvc2010 {
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\lib\\libGLESv2d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\D3DCompiler_43.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49d.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
 
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$OPENSSLDIR_WIN\\bin\\libeay32.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$OPENSSLDIR_WIN\\bin\\ssleay32.dll" "$$TARGETDIR_WIN\\debug\\"$$escape_expand(\\n))
         }
 
         CONFIG(release, debug|release) {
                 # Copy files
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$BASEDIR_WIN\\files" "$$TARGETDIR_WIN\\release\\files" /E /I $$escape_expand(\\n))
 
-                # Copy Qt plugins
-                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$(QTDIR)\\plugins" "$$TARGETDIR_WIN\\release" /E /I $$escape_expand(\\n))
-
                 # Copy Qt DLLs
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qminimal.dll" "$$TARGETDIR_WIN\\release\\platforms\\" /E /I $$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\plugins\\platforms\\qwindows.dll" "$$TARGETDIR_WIN\\release\\platforms\\" /E /I $$escape_expand(\\n))
+
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Core.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Gui.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\Qt5Network.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
@@ -169,6 +173,9 @@ win32-msvc2008|win32-msvc2010 {
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuin49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icudt49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
                 QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$QTDIR_WIN\\bin\\icuuc49.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$OPENSSLDIR_WIN\\bin\\libeay32.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
+                QMAKE_POST_LINK += $$quote(xcopy /D /Y "$$OPENSSLDIR_WIN\\bin\\ssleay32.dll" "$$TARGETDIR_WIN\\release\\"$$escape_expand(\\n))
 
                 #QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.exp"$$escape_expand(\\n))
                 #QMAKE_POST_LINK += $$quote(del /F "$$TARGETDIR_WIN\\release\\qupgrade.lib"$$escape_expand(\\n))
