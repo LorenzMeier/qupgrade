@@ -596,7 +596,7 @@ PX4_Uploader::erase()
 	log("erase...");
 	send(PROTO_CHIP_ERASE);
 	send(PROTO_EOC);
-	return get_sync(10000);		/* allow 10s timeout */
+	return get_sync(30000);		/* allow 30s timeout */
 }
 
 
