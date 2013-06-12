@@ -6,7 +6,7 @@ Firmware flashing tool
 
 ##Building
 
-###Ubuntu 12.10
+###Ubuntu 12.04 / 12.10
 
     sudo add-apt-repository ppa:canonical-qt5-edgers/qt5-proper
     sudo apt-get update
