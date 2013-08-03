@@ -8,7 +8,11 @@
 #include <QThread>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QStandardPaths>
+#else
+#include <QDesktopServices>
+#endif
 #include <QFileInfo>
 #include <QApplication>
 #include <QDesktopWidget>
@@ -139,11 +143,13 @@ void Dialog::loadSettings()
     if (boardIndex >= 0)
         ui->boardComboBox->setCurrentIndex(boardIndex);
 
-    int portIndex = ui->portBox->findText(set.value("PORT_NAME", "").toString());
-    if (portIndex >= 0) {
-        ui->portBox->setCurrentIndex(portIndex);
-    } else {
-        qDebug() << "could not find port" << set.value("PORT_NAME", "");
+    if (set.value("PORT_NAME", "").toString().trimmed().length() > 0) {
+        int portIndex = ui->portBox->findText(set.value("PORT_NAME", "").toString());
+        if (portIndex >= 0) {
+            ui->portBox->setCurrentIndex(portIndex);
+        } else {
+            qDebug() << "could not find port" << set.value("PORT_NAME", "");
+        }
     }
 
     onToggleAdvancedMode(ui->advancedCheckBox->isChecked());
@@ -168,21 +174,41 @@ void Dialog::storeSettings()
 
 void Dialog::updateBoardId(const QString &fileName) {
     // XXX this should be moved in separe classes
+
+    // Attempt to decode JSON
+    QFile json(lastFilename);
+    json.open(QIODevice::ReadOnly | QIODevice::Text);
+    QByteArray jbytes = json.readAll();
+
     if (fileName.endsWith(".px4")) {
-        // Attempt to decode JSON
-        QFile json(lastFilename);
-        json.open(QIODevice::ReadOnly | QIODevice::Text);
-        QByteArray jbytes = json.readAll();
+
+        int checkBoardId;
+
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
         QJsonDocument doc = QJsonDocument::fromJson(jbytes);
 
         if (doc.isNull()) {
             // Error, bail out
             ui->upgradeLog->appendPlainText(tr("supplied file is not a valid JSON document"));
+            return;
         }
 
         QJsonObject px4 = doc.object();
 
-        int checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
+        checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
+#else
+        QString j8(jbytes);
+
+        // BOARD ID
+        QStringList decode_list = j8.split("\"board_id\":");
+        decode_list = decode_list.last().split(",");
+        if (decode_list.count() < 1)
+            ui->upgradeLog->appendPlainText(tr("supplied file is not a valid JSON document"));
+            return;
+        QString board_id = QString(decode_list.first().toUtf8()).trimmed();
+        checkBoardId = board_id.toInt();
+
+#endif
         ui->upgradeLog->appendPlainText(tr("loaded file for board ID %1").arg(checkBoardId));
 
         // Set correct board ID
@@ -229,7 +255,11 @@ void Dialog::onLinkClicked(const QUrl &url)
 
     // If a IO firmware file, open save as Dialog
     if (firmwareFile.endsWith(".bin") && firmwareFile.contains("px4io")) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         QString path = QString(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+#else
+        QString path = QString(QDesktopServices::storageLocation(QDesktopServices::DesktopLocation));
+#endif
         qDebug() << path;
         filename = QFileDialog::getExistingDirectory(this, tr("Select folder (microSD Card)"),
                                                 path);
@@ -241,12 +271,19 @@ void Dialog::onLinkClicked(const QUrl &url)
         //msgBox.setText("Please unplug your PX4 board now");
         //msgBox.exec();
 
-        filename = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        filename = QString(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+#else
+        filename = QString(QDesktopServices::storageLocation(QDesktopServices::DesktopLocation));
+#endif
 
         if (filename.isEmpty()) {
             qDebug() << "Falling back to temp dir";
-            QString filename = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        QString filename = QString(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+#else
+        QString filename = QString(QDesktopServices::storageLocation(QDesktopServices::TempLocation));
+#endif
             // If still empty, bail out
             if (filename.isEmpty())
                 ui->upgradeLog->appendHtml(tr("FAILED storing firmware to downloads or temp directory. Harddisk not writable."));
@@ -401,14 +438,12 @@ void Dialog::onUploadButtonClicked()
 
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id);
 
-            connect(ui->portBox, SIGNAL(currentTextChanged(QString)), worker, SLOT(setPort(QString)));
+            connect(ui->portBox, SIGNAL(editTextChanged(QString)), worker, SLOT(setPort(QString)));
 
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
             // Hook up text from worker to label
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
-            // Hook up error handling
-            connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         }

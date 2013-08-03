@@ -55,8 +55,10 @@
 
 #include <QtGlobal>
 #include <QFile>
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
 #include <QJsonDocument>
 #include <QJsonObject>
+#endif
 #include <QTemporaryFile>
 #include <QDebug>
 #include <QDir>
@@ -249,10 +251,42 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
     if (filename.endsWith(".px4")) {
         log("decoding JSON (%s)", filename.toStdString().c_str());
+
+        // Don't trust 5.0.0's JSON support, as it had issues
         // Attempt to decode JSON
         QFile json(filename);
         json.open(QIODevice::ReadOnly | QIODevice::Text);
         QByteArray jbytes = json.readAll();
+        QString j8(jbytes);
+
+        int imageSize;
+
+#if QT_VERSION <= QT_VERSION_CHECK(5, 0, 0)
+
+        // BOARD ID
+        QStringList decode_list = j8.split("\"board_id\":");
+        decode_list = decode_list.last().split(",");
+        if (decode_list.count() < 1)
+            return -1;
+        QString board_id = QString(decode_list.first().toUtf8()).trimmed();
+        checkBoardId = board_id.toInt();
+
+        // IMAGE SIZE
+        decode_list = j8.split("\"image_size\":");
+        decode_list = decode_list.last().split(",");
+        if (decode_list.count() < 1)
+            return -1;
+        QString image_size = QString(decode_list.first().toUtf8()).trimmed();
+        imageSize = image_size.toInt();
+
+        // DESCRIPTION
+        decode_list = j8.split("\"description\": \"");
+        decode_list = decode_list.last().split("\"");
+        if (decode_list.count() < 1)
+            return -1;
+        QString description = QString(decode_list.first().toUtf8()).trimmed();
+        log("description: %s", description.toStdString().c_str());
+#else
         QJsonDocument doc = QJsonDocument::fromJson(jbytes);
 
         if (doc.isNull()) {
@@ -265,14 +299,16 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         QJsonObject px4 = doc.object();
 
-        int imageSize = (int) (px4.value(QString("image_size")).toDouble());
+        imageSize = (int) (px4.value(QString("image_size")).toDouble());
 
         checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
-        log("loaded file for board ID %d", checkBoardId);
         QString str = px4.value(QString("description")).toString();
         log("description: %s", str.toStdString().c_str());
         QString identity = px4.value(QString("git_identity")).toString();
         log("GIT identity: %s", identity.toStdString().c_str());
+#endif
+
+        log("loaded file for board ID %d", checkBoardId);
         log("uncompressed image size: %d", imageSize);
 
         _fw_fd.setFileName(QDir::tempPath() + "/px4upload_" + QGC::groundTimeMilliseconds() + ".bin");
@@ -294,8 +330,6 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         raw.append((unsigned char)((imageSize >> 16) & 0xFF));
         raw.append((unsigned char)((imageSize >> 8) & 0xFF));
         raw.append((unsigned char)((imageSize >> 0) & 0xFF));
-
-        QString j8(jbytes);
 
         QStringList list = j8.split("\"image\": \"");
         list = list.last().split("\"");
