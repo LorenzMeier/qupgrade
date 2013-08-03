@@ -89,6 +89,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
     qDebug() << __FILE__ << __LINE__ << "LOADING FW" << filename;
 
     emit upgradeStatusChanged(tr("Attempting to upload file:\n%1").arg(filename));
+    emit upgradeProgressChanged(0);
 
     while (!_abortUpload) {
 
@@ -141,6 +142,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                     port->setPortName(openString);
                 }
 
+                qDebug() << "Starting uploader";
+
                 PX4_Uploader uploader(port);
                 // Relay status to top-level UI
                 connect(&uploader, SIGNAL(upgradeProgressChanged(int)), this, SIGNAL(upgradeProgressChanged(int)));
@@ -161,12 +164,17 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                 //            QString humanReadable;
                 //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
 
+                qDebug() << "Beginning upload process";
+
                 int ret = uploader.upload(filename, _filterBoardId);
+
+                qDebug() << "Upload done, result:" << ret;
 
                 // bail out on success
                 if (ret == 0) {
                     emit loadFinished(true);
                     emit finished();
+                    port->close();
                     return;
                 }
             } else if ((filename.endsWith(".ihx") || filename.endsWith(".ihex") || filename.endsWith(".hex")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&

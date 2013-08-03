@@ -136,16 +136,22 @@ PX4_Uploader::~PX4_Uploader()
 
 void PX4_Uploader::send_app_reboot()
 {
-    // Send command to start MAVLink
+    log("Attempting reboot..");
+
+    // Send command to reboot via NSH, then via MAVLink
     // XXX hacky but safe
     // Start NSH
     const char init[] = {0x0d, 0x0d, 0x0d};
     _io_fd->write(init, sizeof(init));
 
     // Reboot
-    char* cmd = "reboot\n";
+    const char* cmd = "reboot\n";
     _io_fd->write(cmd, strlen(cmd));
     _io_fd->write(init, 2);
+
+    // Reboot via MAVLink (if enabled)
+    const char mavlink_msg[] = {0xfe, 0x21,0x24,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x01,0x00,0x00,0x7a,0x02};
+    _io_fd->write(mavlink_msg, sizeof(mavlink_msg));
 }
 
 int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
@@ -239,6 +245,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
     }
 
     /* look for the bootloader */
+
+    log("scanning for bootloader..");
     ret = sync();
 
     if (ret != OK) {
@@ -247,6 +255,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         send_app_reboot();
 		_io_fd->close();
         return ret;
+    } else {
+        log("synced to bootloader");
     }
 
     if (filename.endsWith(".px4")) {
@@ -538,6 +548,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
     }
 
     //log("recv 0x%02x", c);
+
 	return OK;
 }
 
@@ -561,7 +572,7 @@ PX4_Uploader::drain()
 	int ret;
 
 	do {
-        ret = recv(c, 1000);
+        ret = recv(c, 1);
 
 		if (ret == OK) {
 			//log("discard 0x%02x", c);
@@ -624,7 +635,9 @@ PX4_Uploader::get_sync(unsigned timeout)
 int
 PX4_Uploader::sync()
 {
+    qDebug() << "DRAIN START";
 	drain();
+    qDebug() << "DRAIN END";
 
 	/* complete any pending program operation */
 	for (unsigned i = 0; i < (PROG_MULTI_MAX + 6); i++)
@@ -632,6 +645,7 @@ PX4_Uploader::sync()
 
 	send(PROTO_GET_SYNC);
 	send(PROTO_EOC);
+    qDebug() << "GET SYNC START";
 	return get_sync();
 }
 
