@@ -26,4 +26,5 @@ qupgrade
 *.exe
 *.dmg
 *.zip
+*.tar.gz
 *~

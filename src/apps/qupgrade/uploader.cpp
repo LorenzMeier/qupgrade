@@ -55,8 +55,10 @@
 
 #include <QtGlobal>
 #include <QFile>
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
 #include <QJsonDocument>
 #include <QJsonObject>
+#endif
 #include <QTemporaryFile>
 #include <QDebug>
 #include <QDir>
@@ -134,16 +136,26 @@ PX4_Uploader::~PX4_Uploader()
 
 void PX4_Uploader::send_app_reboot()
 {
-    // Send command to start MAVLink
+    log("Attempting reboot..");
+
+    // Send command to reboot via NSH, then via MAVLink
     // XXX hacky but safe
     // Start NSH
     const char init[] = {0x0d, 0x0d, 0x0d};
     _io_fd->write(init, sizeof(init));
 
     // Reboot
-    char* cmd = "reboot\n";
+    const char* cmd = "reboot\n";
     _io_fd->write(cmd, strlen(cmd));
     _io_fd->write(init, 2);
+
+    // Reboot via MAVLink (if enabled)
+    // Try system ID 1
+    const char mavlink_msg_id1[] = {0xfe,0x21,0x72,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x01,0x00,0x00,0x48,0xf0};
+    _io_fd->write(mavlink_msg_id1, sizeof(mavlink_msg_id1));
+    // Try system ID 0 (broadcast)
+    const char mavlink_msg_id0[] = {0xfe,0x21,0x45,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x00,0x00,0x00,0xd7,0xac};
+    _io_fd->write(mavlink_msg_id0, sizeof(mavlink_msg_id0));
 }
 
 int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
@@ -237,6 +249,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
     }
 
     /* look for the bootloader */
+
+    log("scanning for bootloader..");
     ret = sync();
 
     if (ret != OK) {
@@ -245,14 +259,48 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         send_app_reboot();
 		_io_fd->close();
         return ret;
+    } else {
+        log("synced to bootloader");
     }
 
     if (filename.endsWith(".px4")) {
         log("decoding JSON (%s)", filename.toStdString().c_str());
+
+        // Don't trust 5.0.0's JSON support, as it had issues
         // Attempt to decode JSON
         QFile json(filename);
         json.open(QIODevice::ReadOnly | QIODevice::Text);
         QByteArray jbytes = json.readAll();
+        QString j8(jbytes);
+
+        int imageSize;
+
+#if QT_VERSION <= QT_VERSION_CHECK(5, 0, 0)
+
+        // BOARD ID
+        QStringList decode_list = j8.split("\"board_id\":");
+        decode_list = decode_list.last().split(",");
+        if (decode_list.count() < 1)
+            return -1;
+        QString board_id = QString(decode_list.first().toUtf8()).trimmed();
+        checkBoardId = board_id.toInt();
+
+        // IMAGE SIZE
+        decode_list = j8.split("\"image_size\":");
+        decode_list = decode_list.last().split(",");
+        if (decode_list.count() < 1)
+            return -1;
+        QString image_size = QString(decode_list.first().toUtf8()).trimmed();
+        imageSize = image_size.toInt();
+
+        // DESCRIPTION
+        decode_list = j8.split("\"description\": \"");
+        decode_list = decode_list.last().split("\"");
+        if (decode_list.count() < 1)
+            return -1;
+        QString description = QString(decode_list.first().toUtf8()).trimmed();
+        log("description: %s", description.toStdString().c_str());
+#else
         QJsonDocument doc = QJsonDocument::fromJson(jbytes);
 
         if (doc.isNull()) {
@@ -265,14 +313,16 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         QJsonObject px4 = doc.object();
 
-        int imageSize = (int) (px4.value(QString("image_size")).toDouble());
+        imageSize = (int) (px4.value(QString("image_size")).toDouble());
 
         checkBoardId = (int) (px4.value(QString("board_id")).toDouble());
-        log("loaded file for board ID %d", checkBoardId);
         QString str = px4.value(QString("description")).toString();
         log("description: %s", str.toStdString().c_str());
         QString identity = px4.value(QString("git_identity")).toString();
         log("GIT identity: %s", identity.toStdString().c_str());
+#endif
+
+        log("loaded file for board ID %d", checkBoardId);
         log("uncompressed image size: %d", imageSize);
 
         _fw_fd.setFileName(QDir::tempPath() + "/px4upload_" + QGC::groundTimeMilliseconds() + ".bin");
@@ -294,8 +344,6 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
         raw.append((unsigned char)((imageSize >> 16) & 0xFF));
         raw.append((unsigned char)((imageSize >> 8) & 0xFF));
         raw.append((unsigned char)((imageSize >> 0) & 0xFF));
-
-        QString j8(jbytes);
 
         QStringList list = j8.split("\"image\": \"");
         list = list.last().split("\"");
@@ -504,6 +552,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
     }
 
     //log("recv 0x%02x", c);
+
 	return OK;
 }
 
@@ -527,7 +576,7 @@ PX4_Uploader::drain()
 	int ret;
 
 	do {
-        ret = recv(c, 1000);
+        ret = recv(c, 1);
 
 		if (ret == OK) {
 			//log("discard 0x%02x", c);
@@ -590,7 +639,9 @@ PX4_Uploader::get_sync(unsigned timeout)
 int
 PX4_Uploader::sync()
 {
+    qDebug() << "DRAIN START";
 	drain();
+    qDebug() << "DRAIN END";
 
 	/* complete any pending program operation */
 	for (unsigned i = 0; i < (PROG_MULTI_MAX + 6); i++)
@@ -598,6 +649,7 @@ PX4_Uploader::sync()
 
 	send(PROTO_GET_SYNC);
 	send(PROTO_EOC);
+    qDebug() << "GET SYNC START";
 	return get_sync();
 }
 
@@ -624,7 +676,7 @@ PX4_Uploader::erase()
 	log("erase...");
 	send(PROTO_CHIP_ERASE);
 	send(PROTO_EOC);
-	return get_sync(10000);		/* allow 10s timeout */
+	return get_sync(30000);		/* allow 30s timeout */
 }
 
 
