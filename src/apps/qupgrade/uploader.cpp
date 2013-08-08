@@ -144,9 +144,14 @@ void PX4_Uploader::send_app_reboot()
     const char init[] = {0x0d, 0x0d, 0x0d};
     _io_fd->write(init, sizeof(init));
 
-    // Reboot
-    const char* cmd = "reboot\n";
+    // Reboot into bootloader
+    const char* cmd = "reboot -b\n";
     _io_fd->write(cmd, strlen(cmd));
+    _io_fd->write(init, 2);
+
+    // Old reboot command
+    const char* cmd_old = "reboot\n";
+    _io_fd->write(cmd_old, strlen(cmd_old));
     _io_fd->write(init, 2);
 
     // Reboot via MAVLink (if enabled)
