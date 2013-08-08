@@ -6,7 +6,14 @@ Firmware flashing tool
 
 ##Building
 
+### Ubuntu 13.04
+
+    sudo apt-get install ubuntu-sdk
+
 ###Ubuntu 12.10
+
+    NOTE: We recommend to upgrade to Ubuntu 13.04 and NOT installing Qt5 on an older system
+    https://launchpad.net/~canonical-qt5-edgers/+archive/qt5-proper
 
     sudo add-apt-repository ppa:canonical-qt5-edgers/qt5-proper
     sudo apt-get update
