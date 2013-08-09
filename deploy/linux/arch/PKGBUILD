@@ -4,13 +4,14 @@ pkgname=qupgrade
 pkgver=0.5
 pkgrel=1
 pkgdesc="Firmware flashing tool"
-url="https://github.com/julianoes/qupgrade/"
+url="https://github.com/LorenzMeier/qupgrade/"
 license=('GPL3')
 arch=('i686' 'x86_64')
 depends=('qt5-base' 'qt5-webkit')
 makedepends=('git')
 
-_gitroot='https://github.com/julianoes/qupgrade.git'
+_gitroot='https://github.com/LorenzMeier/qupgrade.g
+it'
 _gitname='qupgrade'
 
 build() {
