@@ -38,8 +38,12 @@ build() {
 package() {
   cd "$_gitname-build"
   mkdir -p "$pkgdir/usr/bin/"
-  mkdir -p "$pkgdir/usr/share/qupgrade/"
-  install -Dm755 qupgrade "$pkgdir/usr/bin/qupgrade"
-  install -d 644 files/ "$pkgdir/usr/share/qupgrade/"
-  cp -r files/ "$pkgdir/usr/share/qupgrade"
+  mkdir -p "$pkgdir/usr/share/$pkgname/"
+  install -Dm755 $pkgname "$pkgdir/usr/bin/$pkgname"
+  install -d 644 files/ "$pkgdir/usr/share/$pkgname/"
+  cp -r files/ "$pkgdir/usr/share/$pkgname"
+  cp "deploy/linux/$pkgname.desktop "$pkgdir"/usr/share/applications/
+  for i in 32 64 128 256 512; do
+    install -Dm644 "$files/logo/${i}x${i}/$pkgname.png "$pkgdir"/usr/share/icons/hicolor/${i}x${i}/apps/$pkgname.png
+  done
 }
