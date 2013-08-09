@@ -10,8 +10,7 @@ arch=('i686' 'x86_64')
 depends=('qt5-base' 'qt5-webkit')
 makedepends=('git')
 
-_gitroot='https://github.com/LorenzMeier/qupgrade.g
-it'
+_gitroot='https://github.com/LorenzMeier/qupgrade.git'
 _gitname='qupgrade'
 
 build() {
