@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Version=0.5
+Version=1.0
 Name=QUpgrade
 Comment=Firmware flashing tool
 Exec=qupgrade
 Icon=qupgrade
 Terminal=false
-Categories=Programming;Other;
+Categories=Utility;
