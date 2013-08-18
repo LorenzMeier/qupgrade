@@ -51,7 +51,7 @@
 #endif
 
 #include "uploader.h"
-#include "qgc.h"
+#include <QGC.h>
 
 #include <QtGlobal>
 #include <QFile>
@@ -545,7 +545,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
     quint64 startTime = QGC::groundTimeMilliseconds();
 
     while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
-        SLEEP::usleep(500);
+        QGC::SLEEP::usleep(500);
     }
 
     if (_io_fd->bytesAvailable() < 1) {

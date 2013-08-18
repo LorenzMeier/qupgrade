@@ -3,7 +3,7 @@
 
 #include "qgcfirmwareupgradeworker.h"
 
-#include <qgc.h>
+#include <QGC.h>
 #include "uploader.h"
 #include "qextserialenumerator.h"
 
@@ -50,7 +50,7 @@ void QGCFirmwareUpgradeWorker::startContinousScan()
         //        if (detect()) {
         //            break;
         //        }
-        SLEEP::msleep(100);
+        QGC::SLEEP::msleep(100);
     }
 
     if (exitThread) {
@@ -93,7 +93,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
     while (!_abortUpload) {
 
-        SLEEP::usleep(200000);
+        QGC::SLEEP::usleep(200000);
 
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
 

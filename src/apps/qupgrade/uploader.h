@@ -39,7 +39,6 @@
 #define _PX4_Uploader_H value
 
 #include <stdint.h>
-//#include <stdbool.h>
 #include <qextserialport.h>
 
 #include <QObject>

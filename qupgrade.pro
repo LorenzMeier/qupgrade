@@ -15,18 +15,19 @@ SOURCES += src/apps/qupgrade/main.cpp\
         src/apps/qupgrade/dialog.cpp\
         src/apps/qupgrade/hled.cpp \
         src/apps/qupgrade/uploader.cpp \
-        src/apps/qupgrade/qgc.cpp \
+        src/apps/qupgrade/compat/qgc.cpp \
         src/apps/qupgrade/qgcfirmwareupgradeworker.cpp \
         src/apps/qupgrade/qupgrademainwindow.cpp
 
 HEADERS  += src/apps/qupgrade/dialog.h \
             src/apps/qupgrade/hled.h \
             src/apps/qupgrade/uploader.h \
-            src/apps/qupgrade/qgc.h \
+            src/apps/qupgrade/compat/QGC.h \
             src/apps/qupgrade/qgcfirmwareupgradeworker.h \
             src/apps/qupgrade/qupgrademainwindow.h
 
-INCLUDEPATH += src/apps/qupgrade
+INCLUDEPATH += src/apps/qupgrade \
+			   src/apps/qupgrade/compat
 
 FORMS    += src/apps/qupgrade/dialog.ui \
             src/apps/qupgrade/qupgrademainwindow.ui

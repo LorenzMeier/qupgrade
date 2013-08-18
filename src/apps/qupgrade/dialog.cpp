@@ -22,7 +22,7 @@
 #include <QMessageBox>
 #include <QSettings>
 
-#include "qgc.h"
+#include <QGC.h>
 #include "qgcfirmwareupgradeworker.h"
 
 Dialog::Dialog(QWidget *parent) :
