@@ -226,6 +226,127 @@ int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &fl
 }
 
 int
+PX4_Uploader::detect(int &r_board_id)
+{
+    unsigned int checkBoardMinRev = 0;
+    unsigned int checkBoardMaxRev = 99;
+
+    r_board_id = -1;
+
+    int	ret;
+    size_t fw_size;
+
+    bool insync = false;
+
+    if (!_io_fd->isOpen()) {
+        _io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+
+        // If still not open, complain and exit
+        if (!_io_fd->isOpen()) {
+            log("could not open interface");
+            return -1;
+        }
+    } else {
+        log("opened port %s", _io_fd->portName().toStdString().c_str());
+    }
+
+    /* look for the bootloader */
+
+    log("scanning for bootloader..");
+    ret = sync();
+
+    if (ret != OK) {
+        /* this is immediately fatal */
+        log("bootloader not responding (attempting to reset..)");
+        send_app_reboot();
+        _io_fd->close();
+        return ret;
+    } else {
+        log("synced to bootloader");
+    }
+
+    /* do the usual program thing - allow for failure */
+    for (unsigned retries = 0; retries < 1; retries++) {
+
+        if (!insync) {
+
+            if (retries > 0) {
+                log("retrying update...");
+                ret = sync();
+
+                if (ret != OK) {
+                    /* this is immediately fatal */
+                    log("bootloader not responding, please unplug and re-plug board");
+                    _io_fd->close();
+                    return -EIO;
+                } else {
+                    insync = true;
+                }
+            }
+
+            ret = get_info(INFO_BL_REV, bl_rev);
+
+            if (ret == OK) {
+                if (bl_rev <= BL_REV) {
+                    log("found bootloader revision: %d", bl_rev);
+                    if (bl_rev < 3) {
+                        log("Bootloader v2 is slow, consider upgrading:\nhttps://pixhawk.ethz.ch/px4/users/bootloader_update");
+                    }
+                } else {
+                    log("found unsupported bootloader revision %d, exiting", bl_rev);
+                    _io_fd->close();
+                    return -1;
+                }
+            }
+
+            ret = get_info(INFO_BOARD_ID, board_id);
+
+            if (ret == OK) {
+                r_board_id = board_id;
+                log("found board ID: %d - %s", static_cast<int>(board_id), (boardNames.size() > static_cast<int>(board_id)) ? boardNames.at(board_id).toStdString().c_str() : "UNKNOWN");
+            }
+
+            ret = get_info(INFO_BOARD_REV, board_rev);
+
+            if (ret == OK) {
+                // XXX check that flash size deducts the bootloader space
+                if (board_rev >= checkBoardMinRev && board_rev <= checkBoardMaxRev) {
+                    log("board rev: %d", board_rev);
+                } else {
+                    log("unsupported board rev (%d), exiting", board_rev);
+                    _io_fd->close();
+                    return OK;
+                }
+            }
+
+            ret = get_info(INFO_FLASH_SIZE, flash_size);
+
+            if (ret == OK) {
+//                // XXX check that flash size deducts the bootloader space
+//                if (flash_size > fw_size) {
+//                    log("flash size: %d bytes (%4.1f MiB)", flash_size, flash_size / (1024.0f * 1024.0f));
+//                } else {
+//                    log("not enough flash size (%d bytes avail, %d needed), exiting", flash_size, fw_size);
+//                    _io_fd->close();
+//                    return OK;
+//                }
+            }
+
+        }
+
+        _io_fd->close();
+
+        ret = OK;
+        break;
+    }
+
+    // Close port
+    _io_fd->close();
+
+    return ret;
+}
+
+int
 PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 {
     // magic number, 5 = PX4FMU 1.x

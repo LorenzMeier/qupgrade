@@ -26,49 +26,9 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,0,0,0,0,0,0,0">
-       <item row="0" column="2" colspan="2">
-        <widget class="QComboBox" name="portBox">
-         <item>
-          <property name="text">
-           <string>&lt;Automatic&gt;</string>
-          </property>
-         </item>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,0,0,0,0,0,0,0,0,0">
        <item row="0" column="5">
         <widget class="QComboBox" name="boardComboBox"/>
-       </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="boardIdLabel">
-         <property name="text">
-          <string>Board</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="selectFileButton">
-         <property name="text">
-          <string>Select File</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="7">
-        <widget class="QPushButton" name="cancelButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="7">
-        <widget class="QPushButton" name="flashButton">
-         <property name="text">
-          <string>Flash</string>
-         </property>
-        </widget>
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="portLabel">
@@ -80,14 +40,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="advancedCheckBox">
-         <property name="text">
-          <string>Advanced</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="8">
+       <item row="1" column="0" colspan="10">
         <widget class="QPlainTextEdit" name="upgradeLog">
          <property name="readOnly">
           <bool>true</bool>
@@ -97,7 +50,80 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="7">
+       <item row="2" column="9">
+        <widget class="QPushButton" name="cancelButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="selectFileButton">
+         <property name="text">
+          <string>Select File</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QComboBox" name="versionComboBox">
+         <item>
+          <property name="text">
+           <string extracomment="Recommended for normal users">Stable Version</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Beta Version</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Nightly Build</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="boardIdLabel">
+         <property name="text">
+          <string>Board</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="2">
+        <widget class="QComboBox" name="portBox">
+         <item>
+          <property name="text">
+           <string>&lt;Automatic&gt;</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="advancedCheckBox">
+         <property name="text">
+          <string>Advanced</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QPushButton" name="flashButton">
+         <property name="text">
+          <string>Flash</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="8">
+        <widget class="QPushButton" name="scanButton">
+         <property name="text">
+          <string>Scan</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="9">
         <widget class="QProgressBar" name="upgradeProgressBar">
          <property name="value">
           <number>0</number>

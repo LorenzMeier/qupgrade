@@ -42,6 +42,7 @@ private slots:
     void onFileSelectRequested();
     void onCancelButtonClicked();
     void onUploadButtonClicked();
+    void onDetect();
     void onDownloadFinished();
     void onDownloadRequested(const QNetworkRequest &request);
     void onLinkClicked(const QUrl&);

@@ -10,6 +10,7 @@ class QGCFirmwareUpgradeWorker : public QObject
 public:
     explicit QGCFirmwareUpgradeWorker(QObject *parent = 0);
     static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename, const QString &port="", int boardId=0);
+    static QGCFirmwareUpgradeWorker* putDetectorInThread();
 
 signals:
     void detectionStatusChanged(const QString& status);
@@ -52,6 +53,11 @@ public slots:
      * @brief Load firmware to board
      */
     void loadFirmware();
+
+    /**
+     * @brief Detect boards
+     */
+    void detectBoards();
 
     /**
      * @brief Set the board ID this uploader only accepts

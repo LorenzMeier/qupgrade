@@ -56,10 +56,13 @@ DialogBare::DialogBare(QWidget *parent) :
 
     connect(ui->portBox, SIGNAL(editTextChanged(QString)), SLOT(onPortNameChanged(QString)));
     connect(ui->flashButton, SIGNAL(clicked()), SLOT(onUploadButtonClicked()));
+    connect(ui->scanButton, SIGNAL(clicked()), SLOT(onDetect()));
     connect(ui->selectFileButton, SIGNAL(clicked()), SLOT(onFileSelectRequested()));
     connect(ui->cancelButton, SIGNAL(clicked()), SLOT(onCancelButtonClicked()));
 
     connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
+
+    ui->versionComboBox->hide();
 
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
@@ -80,6 +83,9 @@ DialogBare::DialogBare(QWidget *parent) :
     } else {
         ui->flashButton->setEnabled(false);
     }
+
+    onToggleAdvancedMode(true);
+    ui->advancedCheckBox->setCheckState(Qt::Checked);
 }
 
 DialogBare::~DialogBare()
@@ -104,11 +110,12 @@ void DialogBare::changeEvent(QEvent *e)
 void DialogBare::onToggleAdvancedMode(bool enabled)
 {
     ui->selectFileButton->setVisible(enabled);
-    ui->flashButton->setVisible(enabled);
     ui->portBox->setVisible(enabled);
     ui->portLabel->setVisible(enabled);
     ui->boardIdLabel->setVisible(enabled);
     ui->boardComboBox->setVisible(enabled);
+    ui->versionComboBox->setVisible(!enabled);
+    ui->scanButton->setVisible(!enabled);
 }
 
 void DialogBare::loadSettings()
@@ -375,6 +382,42 @@ void DialogBare::onCancelButtonClicked()
 }
 
 void DialogBare::onUploadButtonClicked()
+{
+    if (loading) {
+        onCancelButtonClicked();
+    } else {
+
+        if (lastFilename.length() > 0) {
+            // Got a filename, upload
+            loading = true;
+            ui->flashButton->setEnabled(false);
+            ui->cancelButton->setEnabled(true);
+
+            int id = -1;
+
+            // Set board ID for worker
+            if (ui->boardComboBox->isVisible()) {
+                bool ok;
+                int tmp = ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()).toInt(&ok);
+                if (ok)
+                    id = tmp;
+            }
+
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id);
+
+            connect(ui->portBox, SIGNAL(editTextChanged(QString)), worker, SLOT(setPort(QString)));
+
+            // Hook up status from worker to progress bar
+            connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
+            // Hook up text from worker to label
+            connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
+            // Hook up status from worker to this class
+            connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+        }
+    }
+}
+
+void DialogBare::onDetect()
 {
     if (loading) {
         onCancelButtonClicked();
