@@ -24,6 +24,8 @@ public:
 
 signals:
     void filenameSet(QString filename);
+    void connectLinks();
+    void disconnectLinks();
 
 protected:
     void changeEvent(QEvent *e);
@@ -35,6 +37,7 @@ public slots:
     void onPortAddedOrRemoved();
     void onLoadStart();
     void onLoadFinished(bool success);
+    void onDetectFinished(bool success, int boardid);
     void onDownloadProgress(qint64 curr, qint64 total);
 
 private slots:

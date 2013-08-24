@@ -52,7 +52,7 @@ QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putDetectorInThread()
 
     worker->moveToThread(thread);
 //    connect(worker, SIGNAL(error(QString)), parent, SLOT(errorString(QString)));
-    connect(thread, SIGNAL(started()), worker, SLOT(detect()));
+    connect(thread, SIGNAL(started()), worker, SLOT(detectBoards()));
     connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
     connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
@@ -79,13 +79,6 @@ void QGCFirmwareUpgradeWorker::startContinousScan()
         exit(0);
     }
 }
-
-void QGCFirmwareUpgradeWorker::detect()
-{
-    
-
-}
-
 
 void QGCFirmwareUpgradeWorker::setBoardId(int id) {
     _filterBoardId = id;
@@ -186,10 +179,10 @@ void QGCFirmwareUpgradeWorker::detectBoards()
                 qDebug() << "Beginning detection process";
 
 //                int ret = uploader.upload(filename, _filterBoardId);
-                int board_id;
+                int board_id = -1;
                 int ret = uploader.detect(board_id);
 
-
+                emit detectFinished((ret == 0), board_id);
 
                 qDebug() << "Detect done, result:" << ret << "Board ID:" << board_id;
 

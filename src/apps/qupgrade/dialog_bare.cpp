@@ -84,7 +84,6 @@ DialogBare::DialogBare(QWidget *parent) :
         ui->flashButton->setEnabled(false);
     }
 
-    onToggleAdvancedMode(true);
     ui->advancedCheckBox->setCheckState(Qt::Checked);
 }
 
@@ -114,6 +113,7 @@ void DialogBare::onToggleAdvancedMode(bool enabled)
     ui->portLabel->setVisible(enabled);
     ui->boardIdLabel->setVisible(enabled);
     ui->boardComboBox->setVisible(enabled);
+    ui->flashButton->setVisible(enabled);
     ui->versionComboBox->setVisible(!enabled);
     ui->scanButton->setVisible(!enabled);
 }
@@ -210,12 +210,6 @@ void DialogBare::updateBoardId(const QString &fileName) {
 void DialogBare::onLinkClicked(const QUrl &url)
 {
     QString firmwareFile = QFileInfo(url.toString()).fileName();
-
-    // If not a firmware file, ignore
-    if (!(firmwareFile.endsWith(".px4") || firmwareFile.endsWith(".bin"))) {
-//        ui->webView->load(url);
-        return;
-    }
 
     QString filename;
 
@@ -335,6 +329,14 @@ void DialogBare::onDownloadFinished()
             onLoadStart();
             lastFilename = fileName;
 
+            if (worker) {
+                worker->abortUpload();
+                worker->deleteLater();
+            }
+
+            // Try to reserve links for us
+            emit disconnectLinks();
+
             worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
@@ -345,10 +347,10 @@ void DialogBare::onDownloadFinished()
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
 
-            // Make sure user gets the board going now
-            QMessageBox msgBox;
-            msgBox.setText("Please unplug your PX4 board now and plug it back in");
-            msgBox.exec();
+//            // Make sure user gets the board going now
+//            QMessageBox msgBox;
+//            msgBox.setText("Please unplug your PX4 board now and plug it back in");
+//            msgBox.exec();
         }
     }
 }
@@ -395,6 +397,9 @@ void DialogBare::onUploadButtonClicked()
 
             int id = -1;
 
+            // Try to reserve links for us
+            emit disconnectLinks();
+
             // Set board ID for worker
             if (ui->boardComboBox->isVisible()) {
                 bool ok;
@@ -423,23 +428,13 @@ void DialogBare::onDetect()
         onCancelButtonClicked();
     } else {
 
-        if (lastFilename.length() > 0) {
-            // Got a filename, upload
-            loading = true;
             ui->flashButton->setEnabled(false);
             ui->cancelButton->setEnabled(true);
 
-            int id = -1;
+            // Try to reserve links for us
+            emit disconnectLinks();
 
-            // Set board ID for worker
-            if (ui->boardComboBox->isVisible()) {
-                bool ok;
-                int tmp = ui->boardComboBox->itemData(ui->boardComboBox->currentIndex()).toInt(&ok);
-                if (ok)
-                    id = tmp;
-            }
-
-            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id);
+            worker = QGCFirmwareUpgradeWorker::putDetectorInThread();
 
             connect(ui->portBox, SIGNAL(editTextChanged(QString)), worker, SLOT(setPort(QString)));
 
@@ -448,8 +443,7 @@ void DialogBare::onDetect()
             // Hook up text from worker to label
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
-            connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
-        }
+            connect(worker, SIGNAL(detectFinished(bool, int)), this, SLOT(onDetectFinished(bool, int)));
     }
 }
 
@@ -496,6 +490,59 @@ void DialogBare::onLoadFinished(bool success)
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));
     } else {
         ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
+        ui->upgradeProgressBar->setValue(0);
+    }
+
+    // Reconnect links after upload
+    QTimer::singleShot(2000, this, SIGNAL(connectLinks()));
+}
+
+void DialogBare::onDetectFinished(bool success, int board_id)
+{
+    loading = false;
+    ui->flashButton->setEnabled(true);
+    ui->cancelButton->setEnabled(false);
+
+    if (success) {
+        ui->upgradeLog->appendPlainText(tr("Board found."));
+        // XXX this should not be hardcoded
+
+        if (ui->versionComboBox->currentIndex() == 0) {
+            if (board_id == 5) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/px4fmu-v1_default.px4"));
+            } else if (board_id == 6) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/px4flow.px4"));
+            } else if (board_id == 9) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/board9.px4"));
+            }
+         } else if (ui->versionComboBox->currentIndex() == 1) {
+            if (board_id == 5) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/px4fmu-v1_default.px4"));
+            } else if (board_id == 6) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/px4flow.px4"));
+            } else if (board_id == 9) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/board9.px4"));
+            }
+         } else if (ui->versionComboBox->currentIndex() == 2) {
+            if (board_id == 5) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/px4fmu-v1_default.px4"));
+            } else if (board_id == 6) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/px4flow.px4"));
+            } else if (board_id == 9) {
+                // Download and flash
+                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/board9.px4"));
+            }
+         }
+    } else {
+        ui->upgradeLog->appendPlainText(tr("No suitable device to upgrade."));
         ui->upgradeProgressBar->setValue(0);
     }
 }

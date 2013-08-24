@@ -119,7 +119,7 @@
        <item row="0" column="8">
         <widget class="QPushButton" name="scanButton">
          <property name="text">
-          <string>Scan</string>
+          <string>Upgrade Firmware</string>
          </property>
         </widget>
        </item>

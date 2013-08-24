@@ -18,6 +18,7 @@ signals:
     void upgradeProgressChanged(int percent);
     void validPortFound(const QString& portName);
     void loadFinished(bool success);
+    void detectFinished(bool success, int boardid);
     void finished();
     
 public slots:
@@ -27,16 +28,6 @@ public slots:
      * @return
      */
     void startContinousScan();
-
-    /**
-     * @brief Detect connected PX4 bootloaders
-     *
-     * If a bootloader was found, the link will be opened to this
-     * bootloader and ready for flashing when returning from the call.
-     *
-     * @return true if found on one link, false else
-     */
-    void detect();
 
     /**
      * @brief Aborts a currently running upload
