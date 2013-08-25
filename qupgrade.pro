@@ -189,3 +189,6 @@ win32-msvc2008|win32-msvc2010 {
                 }
         }
 }
+
+RESOURCES += \
+    qupgrade.qrc

@@ -376,11 +376,9 @@ void DialogBare::onFileSelectRequested()
 
 void DialogBare::onCancelButtonClicked()
 {
-    if (loading) {
-        worker->abortUpload();
-        ui->cancelButton->setEnabled(false);
-        ui->upgradeLog->appendPlainText(tr("Waiting for last upgrade operaton to abort.."));
-    }
+    worker->abortUpload();
+    ui->cancelButton->setEnabled(false);
+    ui->upgradeLog->appendPlainText(tr("Waiting for last operation to abort.."));
 }
 
 void DialogBare::onUploadButtonClicked()

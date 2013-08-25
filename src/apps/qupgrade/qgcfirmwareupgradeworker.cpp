@@ -105,6 +105,8 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
     while (!_abortUpload) {
 
+        qDebug() << "UPGRADE LOOP";
+
         QGC::SLEEP::usleep(200000);
 
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
@@ -135,11 +137,6 @@ void QGCFirmwareUpgradeWorker::detectBoards()
                 openString.prepend("\\\\.\\");
 #endif
 
-
-                qDebug() << "UPLOAD ATTEMPT";
-
-                // Spawn upload thread
-
                 if (port == NULL) {
                     PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
 
@@ -155,6 +152,7 @@ void QGCFirmwareUpgradeWorker::detectBoards()
                 }
 
                 qDebug() << "Starting uploader";
+                emit upgradeStatusChanged(tr("Starting Uploader to read bootloader data"));
 
                 PX4_Uploader uploader(port);
                 // Relay status to top-level UI
@@ -188,15 +186,15 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
                 // bail out on success
                 if (ret == 0) {
+                    emit upgradeStatusChanged(tr("Found board with ID #%1").arg(board_id));
                     port->close();
                     return;
                 }
-            } else if ((filename.endsWith(".ihx") || filename.endsWith(".ihex") || filename.endsWith(".hex")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
-                                  (info.physName.contains("3DR Radio") || info.vendorID == 9900 /* 3DR */)))) {
-
             }
         }
     }
+
+    emit upgradeStatusChanged(tr("No board found."));
 
     _abortUpload = false;
     emit loadFinished(false);
@@ -312,10 +310,12 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
 void QGCFirmwareUpgradeWorker::abortUpload()
 {
+    qDebug() << "Worker asked to abort upload";
     _abortUpload = true;
 }
 
 void QGCFirmwareUpgradeWorker::abort()
 {
+    _abortUpload = true;
     exitThread = true;
 }

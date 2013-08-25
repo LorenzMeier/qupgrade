@@ -234,7 +234,6 @@ PX4_Uploader::detect(int &r_board_id)
     r_board_id = -1;
 
     int	ret;
-    size_t fw_size;
 
     bool insync = false;
 
@@ -665,7 +664,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
 {
     quint64 startTime = QGC::groundTimeMilliseconds();
 
-    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
+    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout/1000)) {
         QGC::SLEEP::usleep(500);
     }
 
