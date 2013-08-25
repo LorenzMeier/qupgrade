@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>660</width>
-    <height>485</height>
+    <height>410</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -26,31 +26,15 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="gridLayoutBrowser" columnstretch="1,0,0,0,0,0,0,0,0,0">
-       <item row="0" column="5">
-        <widget class="QComboBox" name="boardComboBox"/>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="portLabel">
+      <layout class="QGridLayout" name="gridLayoutBrowser" rowstretch="1,10,15,1" columnstretch="1,0,0,0,0,0,0,0,0" rowminimumheight="15,100,100,15">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="advancedCheckBox">
          <property name="text">
-          <string>Port:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <string>Advanced</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="10">
-        <widget class="QPlainTextEdit" name="upgradeLog">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="maximumBlockCount">
-          <number>800</number>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="9">
+       <item row="3" column="8">
         <widget class="QPushButton" name="cancelButton">
          <property name="enabled">
           <bool>false</bool>
@@ -60,10 +44,149 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="boardIdLabel">
+         <property name="text">
+          <string>Board</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="9">
+        <widget class="QPlainTextEdit" name="upgradeLog">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="maximumBlockCount">
+          <number>800</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="9">
+        <widget class="QWidget" name="boardListWidget" native="true">
+         <property name="styleSheet">
+          <string notr="true">QWidget#boardListWidget {
+    background-color: #AAAAAA;
+    border-radius: 16px;
+    border: 3px dashed #888888;
+}
+
+QLabel#boardListLabel {
+    background-color: none;
+    border: none;
+	font-size: 20pt;
+	font-weight: bold;
+	color: #888888;
+}
+
+QPushButton#scanButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #73D95D, stop: 1 #18A154);
+    border-radius: 24px;
+    min-height: 30px;
+    min-width: 320px;
+    max-width: 540px;
+    border: 3px solid #465158;
+}</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout" rowstretch="1,100,0">
+          <item row="1" column="1">
+           <widget class="QPushButton" name="scanButton">
+            <property name="text">
+             <string>Scan</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="boardListLabel">
+            <property name="text">
+             <string>No boards found. Please scan.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="2">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="0" colspan="3">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="0" column="6">
         <widget class="QPushButton" name="selectFileButton">
          <property name="text">
           <string>Select File</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="8">
+        <widget class="QProgressBar" name="upgradeProgressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QComboBox" name="boardComboBox"/>
+       </item>
+       <item row="0" column="2" colspan="2">
+        <widget class="QComboBox" name="portBox">
+         <item>
+          <property name="text">
+           <string>&lt;Automatic&gt;</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="8">
+        <widget class="QPushButton" name="flashButton">
+         <property name="text">
+          <string>Flash</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="portLabel">
+         <property name="text">
+          <string>Port:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -84,50 +207,6 @@
            <string>Nightly Build</string>
           </property>
          </item>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="boardIdLabel">
-         <property name="text">
-          <string>Board</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2" colspan="2">
-        <widget class="QComboBox" name="portBox">
-         <item>
-          <property name="text">
-           <string>&lt;Automatic&gt;</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="advancedCheckBox">
-         <property name="text">
-          <string>Advanced</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="flashButton">
-         <property name="text">
-          <string>Flash</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="8">
-        <widget class="QPushButton" name="scanButton">
-         <property name="text">
-          <string>Scan</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="9">
-        <widget class="QProgressBar" name="upgradeProgressBar">
-         <property name="value">
-          <number>0</number>
-         </property>
         </widget>
        </item>
       </layout>
