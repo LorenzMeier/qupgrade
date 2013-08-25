@@ -18,7 +18,7 @@ signals:
     void upgradeProgressChanged(int percent);
     void validPortFound(const QString& portName);
     void loadFinished(bool success);
-    void detectFinished(bool success, int boardid);
+    void detectFinished(bool success, int board_id, const QString &boardName, const QString &bootLoader);
     void finished();
     
 public slots:
@@ -43,7 +43,7 @@ public slots:
     /**
      * @brief Load firmware to board
      */
-    void loadFirmware();
+    void loadFirmware(bool abortOnFirstError=false);
 
     /**
      * @brief Detect boards

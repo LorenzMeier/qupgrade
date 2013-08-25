@@ -345,6 +345,23 @@ PX4_Uploader::detect(int &r_board_id)
     return ret;
 }
 
+QString PX4_Uploader::getBoardName()
+{
+    if (board_id == 5)
+        return QString("PX4FMU v1.x");
+
+    if (board_id == 6)
+        return QString("PX4FLOW v1.x");
+
+    if (board_id == 9)
+        return QString("PX4 BOARD9");
+}
+
+QString PX4_Uploader::getBootloaderName()
+{
+    return QString("Bootloader rev. %1 (%2 MiB Flash)").arg(bl_rev).arg((float)flash_size / (1024.0f * 1024.0f));
+}
+
 int
 PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 {
@@ -664,7 +681,7 @@ PX4_Uploader::recv(uint8_t &c, unsigned timeout)
 {
     quint64 startTime = QGC::groundTimeMilliseconds();
 
-    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout/1000)) {
+    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
         QGC::SLEEP::usleep(500);
     }
 

@@ -24,11 +24,14 @@
 
 #include <QGC.h>
 #include "qgcfirmwareupgradeworker.h"
+#include "boardwidget.h"
 
 DialogBare::DialogBare(QWidget *parent) :
     QWidget(parent),
     loading(false),
-    ui(new Ui::DialogBare)
+    ui(new Ui::DialogBare),
+    worker(NULL),
+    boardFoundWidget(NULL)
 {
     ui->setupUi(this);
 
@@ -62,8 +65,6 @@ DialogBare::DialogBare(QWidget *parent) :
 
     connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
 
-    ui->versionComboBox->hide();
-
     connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
     connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
 
@@ -83,12 +84,16 @@ DialogBare::DialogBare(QWidget *parent) :
     } else {
         ui->flashButton->setEnabled(false);
     }
-
-    ui->advancedCheckBox->setCheckState(Qt::Checked);
 }
 
 DialogBare::~DialogBare()
 {
+//    if (worker) {
+//        worker->disconnect(this);
+//        worker->abortUpload();
+//        worker->abort();
+//        worker->deleteLater();
+//    }
     storeSettings();
     delete ui;
     delete port;
@@ -114,8 +119,6 @@ void DialogBare::onToggleAdvancedMode(bool enabled)
     ui->boardIdLabel->setVisible(enabled);
     ui->boardComboBox->setVisible(enabled);
     ui->flashButton->setVisible(enabled);
-    ui->versionComboBox->setVisible(!enabled);
-    ui->scanButton->setVisible(!enabled);
 }
 
 void DialogBare::loadSettings()
@@ -332,6 +335,7 @@ void DialogBare::onDownloadFinished()
             if (worker) {
                 worker->abortUpload();
                 worker->deleteLater();
+                worker = NULL;
             }
 
             // Try to reserve links for us
@@ -346,6 +350,9 @@ void DialogBare::onDownloadFinished()
             //connect(worker, SIGNAL(error(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+
+            if (boardFoundWidget)
+                connect(worker, SIGNAL(upgradeStatusChanged(QString)), boardFoundWidget, SLOT(updateStatus(QString)));
 
 //            // Make sure user gets the board going now
 //            QMessageBox msgBox;
@@ -416,6 +423,9 @@ void DialogBare::onUploadButtonClicked()
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
             connect(worker, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+
+            if (boardFoundWidget)
+                connect(worker, SIGNAL(upgradeStatusChanged(QString)), boardFoundWidget, SLOT(updateStatus(QString)));
         }
     }
 }
@@ -432,6 +442,13 @@ void DialogBare::onDetect()
             // Try to reserve links for us
             emit disconnectLinks();
 
+//            if (worker) {
+//                worker->blockSignals(true);
+//                worker->abortUpload();
+//                worker->deleteLater();
+//                worker = NULL;
+//            }
+
             worker = QGCFirmwareUpgradeWorker::putDetectorInThread();
 
             connect(ui->portBox, SIGNAL(editTextChanged(QString)), worker, SLOT(setPort(QString)));
@@ -441,7 +458,7 @@ void DialogBare::onDetect()
             // Hook up text from worker to label
             connect(worker, SIGNAL(upgradeStatusChanged(QString)), ui->upgradeLog, SLOT(appendPlainText(QString)));
             // Hook up status from worker to this class
-            connect(worker, SIGNAL(detectFinished(bool, int)), this, SLOT(onDetectFinished(bool, int)));
+            connect(worker, SIGNAL(detectFinished(bool, int, QString, QString)), this, SLOT(onDetectFinished(bool, int, QString, QString)));
     }
 }
 
@@ -486,63 +503,70 @@ void DialogBare::onLoadFinished(bool success)
 
     if (success) {
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));
+        ui->boardListLabel->show();
+        ui->boardListLabel->setText(tr("Upgrade succeeded. To flash another board firmware, click scan."));
+        ui->scanButton->show();
+        if (boardFoundWidget) {
+            ui->boardListLayout->removeWidget(boardFoundWidget);
+            delete boardFoundWidget;
+            boardFoundWidget = NULL;
+        }
+
+        worker->abortUpload();
+
+        // Reconnect links after upload
+        QTimer::singleShot(2000, this, SIGNAL(connectLinks()));
+
     } else {
         ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
         ui->upgradeProgressBar->setValue(0);
     }
 
-    // Reconnect links after upload
-    QTimer::singleShot(2000, this, SIGNAL(connectLinks()));
 }
 
-void DialogBare::onDetectFinished(bool success, int board_id)
-{
+void DialogBare::onDetectFinished(bool success, int board_id, const QString &boardName, const QString &bootLoader)
+{   
     loading = false;
-    ui->flashButton->setEnabled(true);
-    ui->cancelButton->setEnabled(false);
 
     if (success) {
-        ui->upgradeLog->appendPlainText(tr("Board found."));
-        // XXX this should not be hardcoded
+        ui->flashButton->setEnabled(true);
+        ui->cancelButton->setEnabled(false);
+        ui->upgradeLog->appendPlainText(tr("Board found with ID #%1.").arg(board_id));
 
-        if (ui->versionComboBox->currentIndex() == 0) {
-            if (board_id == 5) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/px4fmu-v1_default.px4"));
-            } else if (board_id == 6) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/px4flow.px4"));
-            } else if (board_id == 9) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/firmware/board9.px4"));
+        switch (board_id) {
+        case 5:
+        {
+            if (boardFoundWidget) {
+                ui->boardListLayout->removeWidget(boardFoundWidget);
+                delete boardFoundWidget;
+                boardFoundWidget = NULL;
             }
-         } else if (ui->versionComboBox->currentIndex() == 1) {
-            if (board_id == 5) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/px4fmu-v1_default.px4"));
-            } else if (board_id == 6) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/px4flow.px4"));
-            } else if (board_id == 9) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/beta/board9.px4"));
-            }
-         } else if (ui->versionComboBox->currentIndex() == 2) {
-            if (board_id == 5) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/px4fmu-v1_default.px4"));
-            } else if (board_id == 6) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/px4flow.px4"));
-            } else if (board_id == 9) {
-                // Download and flash
-                onLinkClicked(QUrl("http://www.inf.ethz.ch/personal/lomeier/downloads/nightly/board9.px4"));
-            }
-         }
+            // Instantiate the appropriate board widget
+            BoardWidget* w = new BoardWidget(this);
+            w->setBoardInfo(board_id, boardName, bootLoader);
+            connect(w, SIGNAL(flashFirmwareURL(QString)), this, SLOT(onFlashURL(QString)));
+
+            boardFoundWidget = w;
+
+            w->updateStatus(tr("Ready for Firmware upload. Choose a firmware and flash."));
+
+            ui->boardListLabel->hide();
+            ui->scanButton->hide();
+            ui->boardListLayout->addWidget(w, 0, 0);
+
+        }
+            break;
+        }
+
     } else {
         ui->upgradeLog->appendPlainText(tr("No suitable device to upgrade."));
         ui->upgradeProgressBar->setValue(0);
     }
+}
+
+void DialogBare::onFlashURL(const QString &url)
+{
+    onLinkClicked(QUrl(url));
 }
 
 void DialogBare::onDownloadProgress(qint64 curr, qint64 total)

@@ -56,6 +56,9 @@ public:
     int detect(int &r_board_id);
     int get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync);
 
+    QString getBoardName();
+    QString getBootloaderName();
+
 signals:
      void upgradeProgressChanged(int percent);
      void upgradeStatusChanged(const QString& str);

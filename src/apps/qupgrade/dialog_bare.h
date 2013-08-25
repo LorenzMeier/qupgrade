@@ -37,7 +37,8 @@ public slots:
     void onPortAddedOrRemoved();
     void onLoadStart();
     void onLoadFinished(bool success);
-    void onDetectFinished(bool success, int boardid);
+    void onDetectFinished(bool success, int board_id, const QString &boardName, const QString &bootLoader);
+    void onFlashURL(const QString &url);
     void onDownloadProgress(qint64 curr, qint64 total);
 
 private slots:
@@ -58,6 +59,7 @@ private:
     QextSerialPort *port;
     QextSerialEnumerator *enumerator;
     QGCFirmwareUpgradeWorker *worker;
+    QWidget *boardFoundWidget;
 
     QString lastFilename;
 };

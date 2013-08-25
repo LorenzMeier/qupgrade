@@ -101,7 +101,6 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 {
 
     emit upgradeStatusChanged(tr("Detecting boards.."));
-    emit upgradeProgressChanged(0);
 
     while (!_abortUpload) {
 
@@ -151,7 +150,6 @@ void QGCFirmwareUpgradeWorker::detectBoards()
                     port->setPortName(openString);
                 }
 
-                qDebug() << "Starting uploader";
                 emit upgradeStatusChanged(tr("Starting Uploader to read bootloader data"));
 
                 PX4_Uploader uploader(port);
@@ -176,16 +174,19 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
                 qDebug() << "Beginning detection process";
 
-//                int ret = uploader.upload(filename, _filterBoardId);
                 int board_id = -1;
                 int ret = uploader.detect(board_id);
-
-                emit detectFinished((ret == 0), board_id);
 
                 qDebug() << "Detect done, result:" << ret << "Board ID:" << board_id;
 
                 // bail out on success
-                if (ret == 0) {
+                if (ret == 0 && board_id > 0) {
+
+                    QString board = uploader.getBoardName();
+                    QString bootLoader = uploader.getBootloaderName();
+
+                    emit detectFinished((ret == 0), board_id, board, bootLoader);
+
                     emit upgradeStatusChanged(tr("Found board with ID #%1").arg(board_id));
                     port->close();
                     return;
@@ -197,12 +198,11 @@ void QGCFirmwareUpgradeWorker::detectBoards()
     emit upgradeStatusChanged(tr("No board found."));
 
     _abortUpload = false;
-    emit loadFinished(false);
     this->deleteLater();
 
 }
 
-void QGCFirmwareUpgradeWorker::loadFirmware()
+void QGCFirmwareUpgradeWorker::loadFirmware(bool abortOnFirstError)
 {
     qDebug() << __FILE__ << __LINE__ << "LOADING FW" << filename;
 
@@ -214,6 +214,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
         QGC::SLEEP::usleep(200000);
 
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
+
+        int ret;
 
         foreach (QextPortInfo info, ports) {
 
@@ -284,7 +286,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
                 qDebug() << "Beginning upload process";
 
-                int ret = uploader.upload(filename, _filterBoardId);
+                ret = uploader.upload(filename, _filterBoardId);
 
                 qDebug() << "Upload done, result:" << ret;
 
@@ -300,6 +302,12 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
             }
         }
+
+        if (ret != 0 && abortOnFirstError) {
+            // Error, abort
+            emit upgradeStatusChanged(tr("Firmware upgrade not possible, aborting."));
+        }
+
     }
 
     _abortUpload = false;
