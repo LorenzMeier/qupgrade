@@ -88,12 +88,7 @@ DialogBare::DialogBare(QWidget *parent) :
 
 DialogBare::~DialogBare()
 {
-//    if (worker) {
-//        worker->disconnect(this);
-//        worker->abortUpload();
-//        worker->abort();
-//        worker->deleteLater();
-//    }
+    // No need to delete worker, its self-destructing
     storeSettings();
     delete ui;
     delete port;
@@ -119,6 +114,13 @@ void DialogBare::onToggleAdvancedMode(bool enabled)
     ui->boardIdLabel->setVisible(enabled);
     ui->boardComboBox->setVisible(enabled);
     ui->flashButton->setVisible(enabled);
+    ui->scanButton->setVisible(!enabled);
+
+    if (enabled) {
+        ui->boardListLabel->setText(tr("Advanced Mode. Please select a file to upload and click flash."));
+    } else {
+        ui->boardListLabel->setText(tr("Please scan to upgrade PX4 boards."));
+    }
 }
 
 void DialogBare::loadSettings()
@@ -332,16 +334,10 @@ void DialogBare::onDownloadFinished()
             onLoadStart();
             lastFilename = fileName;
 
-            if (worker) {
-                worker->abortUpload();
-                worker->deleteLater();
-                worker = NULL;
-            }
-
             // Try to reserve links for us
             emit disconnectLinks();
 
-            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName);
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(fileName, "", 0, true);
             // Hook up status from worker to progress bar
             connect(worker, SIGNAL(upgradeProgressChanged(int)), ui->upgradeProgressBar, SLOT(setValue(int)));
             // Hook up text from worker to label
@@ -365,7 +361,8 @@ void DialogBare::onDownloadFinished()
 void DialogBare::onFileSelectRequested()
 {
     if (loading) {
-        worker->abortUpload();
+        if (worker)
+            worker->abortUpload();
         loading = false;
     }
 
@@ -383,7 +380,8 @@ void DialogBare::onFileSelectRequested()
 
 void DialogBare::onCancelButtonClicked()
 {
-    worker->abortUpload();
+    if (worker)
+        worker->abortUpload();
     ui->cancelButton->setEnabled(false);
     ui->upgradeLog->appendPlainText(tr("Waiting for last operation to abort.."));
 }
@@ -413,7 +411,7 @@ void DialogBare::onUploadButtonClicked()
                     id = tmp;
             }
 
-            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id);
+            worker = QGCFirmwareUpgradeWorker::putWorkerInThread(lastFilename, ui->portBox->currentText(), id, true);
 
             connect(ui->portBox, SIGNAL(editTextChanged(QString)), worker, SLOT(setPort(QString)));
 
@@ -441,13 +439,6 @@ void DialogBare::onDetect()
 
             // Try to reserve links for us
             emit disconnectLinks();
-
-//            if (worker) {
-//                worker->blockSignals(true);
-//                worker->abortUpload();
-//                worker->deleteLater();
-//                worker = NULL;
-//            }
 
             worker = QGCFirmwareUpgradeWorker::putDetectorInThread();
 
@@ -498,27 +489,32 @@ void DialogBare::onLoadStart()
 void DialogBare::onLoadFinished(bool success)
 {
     loading = false;
+    worker = NULL;
+
     ui->flashButton->setEnabled(true);
     ui->cancelButton->setEnabled(false);
 
     if (success) {
         ui->upgradeLog->appendPlainText(tr("Upload succeeded."));
         ui->boardListLabel->show();
-        ui->boardListLabel->setText(tr("Upgrade succeeded. To flash another board firmware, click scan."));
-        ui->scanButton->show();
+        if (ui->advancedCheckBox->checkState() == Qt::Checked) {
+            ui->boardListLabel->setText(tr("Upgrade succeeded. The re-flash, just click flash again."));
+        } else {
+            ui->boardListLabel->setText(tr("Upgrade succeeded. To flash another board firmware, click scan."));
+            ui->scanButton->show();
+        }
         if (boardFoundWidget) {
             ui->boardListLayout->removeWidget(boardFoundWidget);
             delete boardFoundWidget;
             boardFoundWidget = NULL;
         }
 
-        worker->abortUpload();
-
         // Reconnect links after upload
         QTimer::singleShot(2000, this, SIGNAL(connectLinks()));
 
     } else {
         ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
+        ui->boardListLabel->setText(tr("Upload aborted and failed."));
         ui->upgradeProgressBar->setValue(0);
     }
 
@@ -527,6 +523,7 @@ void DialogBare::onLoadFinished(bool success)
 void DialogBare::onDetectFinished(bool success, int board_id, const QString &boardName, const QString &bootLoader)
 {   
     loading = false;
+    worker = NULL;
 
     if (success) {
         ui->flashButton->setEnabled(true);

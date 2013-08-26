@@ -17,7 +17,7 @@ QGCFirmwareUpgradeWorker::QGCFirmwareUpgradeWorker(QObject *parent) :
 {
 }
 
-QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QString &filename, const QString &port, int boardId)
+QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QString &filename, const QString &port, int boardId, bool abortOnFirstError)
 {
     QGCFirmwareUpgradeWorker *worker = NULL;
     QThread *thread = NULL;
@@ -27,6 +27,7 @@ QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putWorkerInThread(const QStr
     worker->setPort(port);
     if (boardId >= 0)
         worker->setBoardId(boardId);
+    worker->setAbortOnError(abortOnFirstError);
     thread = new QThread;
 
     worker->moveToThread(thread);
@@ -83,6 +84,12 @@ void QGCFirmwareUpgradeWorker::startContinousScan()
 void QGCFirmwareUpgradeWorker::setBoardId(int id) {
     _filterBoardId = id;
 }
+
+void QGCFirmwareUpgradeWorker::setAbortOnError(bool abort) {
+    _abortOnFirstError = abort;
+}
+
+
 
 void QGCFirmwareUpgradeWorker::setPort(const QString &port) {
     if (port.contains("Automatic")) {
@@ -202,7 +209,7 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
 }
 
-void QGCFirmwareUpgradeWorker::loadFirmware(bool abortOnFirstError)
+void QGCFirmwareUpgradeWorker::loadFirmware()
 {
     qDebug() << __FILE__ << __LINE__ << "LOADING FW" << filename;
 
@@ -216,6 +223,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware(bool abortOnFirstError)
         QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
 
         int ret;
+        bool boardFound = false;
+        bool wrongBoard = false;
 
         foreach (QextPortInfo info, ports) {
 
@@ -277,18 +286,26 @@ void QGCFirmwareUpgradeWorker::loadFirmware(bool abortOnFirstError)
                     emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName));
                 }
 
-                //            quint32 board_id;
-                //            quint32 board_rev;
-                //            quint32 flash_size;
-                //            bool insync = false;
-                //            QString humanReadable;
-                //uploader.get_bl_info(board_id, board_rev, flash_size, humanReadable, insync);
-
-                qDebug() << "Beginning upload process";
-
                 ret = uploader.upload(filename, _filterBoardId);
 
-                qDebug() << "Upload done, result:" << ret;
+                if (ret == -200) {
+                    // Image is corrupt
+                    emit upgradeStatusChanged(tr("Corrupt binary, aborting"));
+                    emit loadFinished(false);
+                    emit finished();
+                    port->close();
+                    return;
+                }
+
+                qDebug() << "RET: " << ret << "ABORT" << _abortOnFirstError;
+
+                if (ret == 0 || ret == -1 || ret == -2) {
+                    boardFound = true;
+                }
+
+                if (ret == -1 || ret == -2) {
+                    wrongBoard = true;
+                }
 
                 // bail out on success
                 if (ret == 0) {
@@ -303,9 +320,13 @@ void QGCFirmwareUpgradeWorker::loadFirmware(bool abortOnFirstError)
             }
         }
 
-        if (ret != 0 && abortOnFirstError) {
+        if (boardFound && wrongBoard && _abortOnFirstError) {
             // Error, abort
-            emit upgradeStatusChanged(tr("Firmware upgrade not possible, aborting."));
+            emit upgradeStatusChanged(tr("Wrong board ID, aborting."));
+            emit loadFinished(false);
+            emit finished();
+            port->close();
+            return;
         }
 
     }

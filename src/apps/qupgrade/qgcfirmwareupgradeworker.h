@@ -9,7 +9,7 @@ class QGCFirmwareUpgradeWorker : public QObject
     Q_OBJECT
 public:
     explicit QGCFirmwareUpgradeWorker(QObject *parent = 0);
-    static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename, const QString &port="", int boardId=0);
+    static QGCFirmwareUpgradeWorker* putWorkerInThread(const QString &filename, const QString &port="", int boardId=0, bool abortOnFirstError=false);
     static QGCFirmwareUpgradeWorker* putDetectorInThread();
 
 signals:
@@ -43,7 +43,7 @@ public slots:
     /**
      * @brief Load firmware to board
      */
-    void loadFirmware(bool abortOnFirstError=false);
+    void loadFirmware();
 
     /**
      * @brief Detect boards
@@ -55,6 +55,12 @@ public slots:
      * @param id
      */
     void setBoardId(int id);
+
+    /**
+     * @brief Aborts the upload process after the first complete unsuccessful port sweep
+     * @param abort
+     */
+    void setAbortOnError(bool abort);
 
     /**
      * @brief Set a fixed port name, do not perform automatic scanning
@@ -72,6 +78,7 @@ protected:
 
 private:
     bool _abortUpload;
+    bool _abortOnFirstError;
     int _filterBoardId;
     QString _fixedPortName;
     QextSerialPort *port;
