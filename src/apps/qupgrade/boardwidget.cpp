@@ -1,3 +1,5 @@
+#include <QMessageBox>
+
 #include "boardwidget.h"
 #include "ui_boardwidget.h"
 
@@ -42,6 +44,46 @@ void BoardWidget::resizeEvent(QResizeEvent* event)
 void BoardWidget::flashFirmware()
 {
     QString url = ui->firmwareComboBox->itemData(ui->firmwareComboBox->currentIndex()).toString();
+
+    if (url.contains("beta")) {
+        int ret = QMessageBox::warning(this, tr("WARNING: BETA FIRMWARE"),
+                                       tr("This firmware version is ONLY intended for beta testers."
+                                          "Although it has received FLIGHT TESTING, it represents\n"
+                                          "actively changed code. Do NOT use for normal operation.\n"
+                                          "Disclaimer of the BSD open source license as redistributed with source code applies."),
+                                       QMessageBox::Ok
+                                       | QMessageBox::Cancel,
+                                       QMessageBox::Cancel);
+        if (ret != QMessageBox::Ok)
+            return;
+    }
+
+    if (url.contains("continuous")) {
+        int ret = QMessageBox::critical(this, tr("WARNING: CONTINUOUS BUILD FIRMWARE"),
+                                       tr("This firmware has NOT BEEN FLIGHT TESTED.\n"
+                                          "It is only intended for DEVELOPERS. Run bench tests\n"
+                                          "without props first, do NOT fly this without addional\n"
+                                          "safety precautions. Follow the mailing list actively when using it.\n"
+                                          "Disclaimer of the BSD open source license as redistributed with source code applies."),
+                                       QMessageBox::Ok
+                                       | QMessageBox::Cancel,
+                                       QMessageBox::Cancel);
+        if (ret != QMessageBox::Ok)
+            return;
+    }
+
+    if (url.contains("stable")) {
+        int ret = QMessageBox::information(this, tr("Flashing stable build"),
+                                       tr("By flashing this firmware you agree to the terms and\n"
+                                          "disclaimer of the BSD open source license, as\n"
+                                          "redistributed with the source code."),
+                                       QMessageBox::Ok
+                                       | QMessageBox::Cancel,
+                                       QMessageBox::Cancel);
+        if (ret != QMessageBox::Ok)
+            return;
+    }
+
     emit flashFirmwareURL(url);
 }
 
@@ -60,7 +102,7 @@ void BoardWidget::setBoardInfo(int board_id, const QString &boardName, const QSt
 
     switch (board_id) {
     case 5:
-    {
+    {   
         setBoardImage(":/files/boards/px4fmu_1.x.png");
         ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/px4fmu-v1_default.px4");
         ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/px4fmu-v1_default.px4");
