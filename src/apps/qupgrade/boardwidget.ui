@@ -49,6 +49,39 @@ QPushButton#flashButton {
    <item row="0" column="1">
     <widget class="QWidget" name="containerWidget" native="true">
      <layout class="QGridLayout" name="gridLayout">
+      <item row="4" column="3">
+       <widget class="QPushButton" name="flashButton">
+        <property name="text">
+         <string>Upgrade</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" colspan="2">
+       <widget class="QLabel" name="bootloaderLabel">
+        <property name="text">
+         <string>Bootloader v 3.0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="QComboBox" name="firmwareComboBox"/>
+      </item>
+      <item row="2" column="2" colspan="2">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>148</width>
+          <height>41</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
       <item row="0" column="0" rowspan="3" colspan="2">
        <widget class="QLabel" name="iconLabel">
         <property name="minimumSize">
@@ -72,29 +105,6 @@ QPushButton#flashButton {
         </property>
        </widget>
       </item>
-      <item row="1" column="2" colspan="2">
-       <widget class="QLabel" name="bootloaderLabel">
-        <property name="text">
-         <string>Bootloader v 3.0</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2" colspan="2">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>148</width>
-          <height>41</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item row="3" column="0" colspan="4">
        <widget class="QLabel" name="statusLabel">
         <property name="text">
@@ -115,13 +125,10 @@ QPushButton#flashButton {
         </property>
        </spacer>
       </item>
-      <item row="4" column="1" colspan="2">
-       <widget class="QComboBox" name="firmwareComboBox"/>
-      </item>
-      <item row="4" column="3">
-       <widget class="QPushButton" name="flashButton">
+      <item row="4" column="4">
+       <widget class="QPushButton" name="cancelButton">
         <property name="text">
-         <string>Upgrade</string>
+         <string>Cancel</string>
         </property>
        </widget>
       </item>

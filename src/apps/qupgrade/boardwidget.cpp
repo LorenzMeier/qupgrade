@@ -8,6 +8,7 @@ BoardWidget::BoardWidget(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->flashButton, SIGNAL(clicked()), this, SLOT(flashFirmware()));
+    connect(ui->cancelButton, SIGNAL(clicked()), this, SIGNAL(cancelFirmwareUpload()));
 
     setBoardImage("./files/images/px4/calibration/accel_z-.png");
 }

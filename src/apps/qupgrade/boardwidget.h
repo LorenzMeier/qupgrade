@@ -27,6 +27,7 @@ public slots:
 
 signals:
     void flashFirmwareURL(QString url);
+    void cancelFirmwareUpload();
 
 protected slots:
     void flashFirmware();

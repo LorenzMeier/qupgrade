@@ -495,6 +495,26 @@ void DialogBare::onLoadStart()
     ui->cancelButton->setEnabled(true);
 }
 
+void DialogBare::onUserAbort()
+{
+    loading = false;
+    ui->flashButton->setEnabled(true);
+    ui->cancelButton->setEnabled(false);
+
+    ui->upgradeLog->appendPlainText(tr("Canceled by user request"));
+    ui->boardListLabel->show();
+    ui->boardListLabel->setText(tr("Upgrade canceled. To start another upgrade attempt, click scan."));
+    ui->scanButton->show();
+    if (boardFoundWidget) {
+        ui->boardListLayout->removeWidget(boardFoundWidget);
+        delete boardFoundWidget;
+        boardFoundWidget = NULL;
+    }
+
+    ui->upgradeProgressBar->setValue(0);
+
+}
+
 void DialogBare::onLoadFinished(bool success)
 {
     loading = false;
@@ -515,7 +535,7 @@ void DialogBare::onLoadFinished(bool success)
         worker->abortUpload();
 
         // Reconnect links after upload
-        QTimer::singleShot(2000, this, SIGNAL(connectLinks()));
+        QTimer::singleShot(3000, this, SIGNAL(connectLinks()));
 
     } else {
         ui->upgradeLog->appendPlainText(tr("Upload aborted and failed."));
@@ -535,6 +555,8 @@ void DialogBare::onDetectFinished(bool success, int board_id, const QString &boa
 
         switch (board_id) {
         case 5:
+        case 6:
+        case 9:
         {
             if (boardFoundWidget) {
                 ui->boardListLayout->removeWidget(boardFoundWidget);
@@ -545,6 +567,7 @@ void DialogBare::onDetectFinished(bool success, int board_id, const QString &boa
             BoardWidget* w = new BoardWidget(this);
             w->setBoardInfo(board_id, boardName, bootLoader);
             connect(w, SIGNAL(flashFirmwareURL(QString)), this, SLOT(onFlashURL(QString)));
+            connect(w, SIGNAL(cancelFirmwareUpload()), this, SLOT(onUserAbort()));
 
             boardFoundWidget = w;
 

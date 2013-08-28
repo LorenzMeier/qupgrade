@@ -37,6 +37,7 @@ public slots:
     void onPortAddedOrRemoved();
     void onLoadStart();
     void onLoadFinished(bool success);
+    void onUserAbort();
     void onDetectFinished(bool success, int board_id, const QString &boardName, const QString &bootLoader);
     void onFlashURL(const QString &url);
     void onDownloadProgress(qint64 curr, qint64 total);
