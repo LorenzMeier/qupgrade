@@ -62,23 +62,23 @@ void BoardWidget::setBoardInfo(int board_id, const QString &boardName, const QSt
     case 5:
     {
         setBoardImage(":/files/boards/px4fmu_1.x.png");
-        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/bin/px4fmu-v1_default.px4");
-        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/bin/px4fmu-v1_default.px4");
-        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continous/bin/px4fmu-v1_default.px4");
+        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/px4fmu-v1_default.px4");
+        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/px4fmu-v1_default.px4");
+        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continuous/px4fmu-v1_default.px4");
     }
         break;
     case 6:
     {
         setBoardImage(":/files/boards/px4flow_1.x.png");
-        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/bin/px4flow.px4");
-        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/bin/px4flow.px4");
-        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continous/bin/px4flow.px4");
+        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/px4flow.px4");
+        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/px4flow.px4");
+        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continuous/px4flow.px4");
     }
         break;
     case 9:
-        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/bin/px4fmu-v2_default.px4");
-        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/bin/px4fmu-v2_default.px4");
-        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continous/bin/px4fmu-v2_default.px4");
+        ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/px4fmu-v2_default.px4");
+        ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/px4fmu-v2_default.px4");
+        ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continuous/px4fmu-v2_default.px4");
         break;
 
     }
