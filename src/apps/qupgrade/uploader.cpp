@@ -466,6 +466,9 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         log("loaded file for board ID %d", checkBoardId);
         log("uncompressed image size: %d", imageSize);
+        if (imageSize == 0) {
+            return -200;
+        }
 
         _fw_fd.setFileName(QDir::tempPath() + "/px4upload_" + QGC::groundTimeMilliseconds() + ".bin");
         _fw_fd.open(QIODevice::ReadWrite);
@@ -583,7 +586,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
                 } else {
                     log("found unsupported board ID %d, exiting", board_id);
 					_io_fd->close();
-                    return -1;
+                    return -2;
                 }
             }
 
