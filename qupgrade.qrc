@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>files/boards/px4flow_1.x.png</file>
         <file>files/boards/px4fmu_1.x.png</file>
+        <file>files/boards/px4fmu_2.x.png</file>
     </qresource>
 </RCC>

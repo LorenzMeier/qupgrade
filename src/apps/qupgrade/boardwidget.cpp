@@ -118,6 +118,7 @@ void BoardWidget::setBoardInfo(int board_id, const QString &boardName, const QSt
     }
         break;
     case 9:
+        setBoardImage(":/files/boards/px4fmu_2.x.png");
         ui->firmwareComboBox->addItem("Stable Version", "http://px4.oznet.ch/stable/px4fmu-v2_default.px4");
         ui->firmwareComboBox->addItem("Beta Testing", "http://px4.oznet.ch/beta/px4fmu-v2_default.px4");
         ui->firmwareComboBox->addItem("Continous Build", "http://px4.oznet.ch/continuous/px4fmu-v2_default.px4");
