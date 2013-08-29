@@ -36,7 +36,7 @@ void BoardWidget::resizeEvent(QResizeEvent* event)
     int w = ui->iconLabel->width();
     int h = ui->iconLabel->height();
 
-    ui->iconLabel->setPixmap(boardIcon.scaled(w, h, Qt::KeepAspectRatio));
+    ui->iconLabel->setPixmap(boardIcon.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
     QWidget::resizeEvent(event);
 }
