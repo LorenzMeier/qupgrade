@@ -123,7 +123,7 @@ PX4_Uploader::PX4_Uploader(QextSerialPort* port, QObject *parent) : QObject(pare
     boardNames.append("PX4FLOW v1.x");
     boardNames.append("PX4IO v1.x");
     boardNames.append("Eight");
-    boardNames.append("Nine");
+    boardNames.append("PX4 PIXHAWK v1.x");
     boardNames.append("Ten");
 
     // Create serial port instance
@@ -347,14 +347,11 @@ PX4_Uploader::detect(int &r_board_id)
 
 QString PX4_Uploader::getBoardName()
 {
-    if (board_id == 5)
-        return QString("PX4FMU v1.x");
-
-    if (board_id == 6)
-        return QString("PX4FLOW v1.x");
-
-    if (board_id == 9)
-        return QString("PX4 BOARD9");
+    if (board_id >= 0 && board_id < boardNames.length()) {
+        return boardNames[board_id];
+    } else {
+        return "UNKNOWN";
+    }
 }
 
 QString PX4_Uploader::getBootloaderName()
