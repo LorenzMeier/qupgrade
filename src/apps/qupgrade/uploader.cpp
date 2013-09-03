@@ -879,7 +879,7 @@ PX4_Uploader::program(size_t fw_size)
         if (bl_rev == 2) {
             /* expect slower verify for bootloader rev 2 */
             emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*45.0f));
-        } else if (bl_rev > 3) {
+        } else if (bl_rev >= 3) {
             /* expect fast verify for bootloader rev 3 */
             emit upgradeProgressChanged(10 + (int)(((float)sent/(float)fw_size)*80.0f));
         } else {
