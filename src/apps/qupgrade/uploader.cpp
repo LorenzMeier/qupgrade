@@ -347,7 +347,7 @@ PX4_Uploader::detect(int &r_board_id)
 
 QString PX4_Uploader::getBoardName()
 {
-    if (board_id >= 0 && board_id < boardNames.length()) {
+    if (static_cast<int>(board_id) < boardNames.length()) {
         return boardNames[board_id];
     } else {
         return "UNKNOWN";
