@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
  ****************************************************************************/
 
 /**
- * @file Firmware uploader for PX4IO
+ * @file uploader.h Firmware uploader for PX4 boards
  */
 
 #ifndef _PX4_Uploader_H
@@ -95,10 +95,10 @@ private:
     QFile		_fw_fd;
     QList<QString> boardNames;
 
-    uint32_t	bl_rev;         ///< bootloader revision
-    uint32_t    board_id;       ///< board ID
-    uint32_t    board_rev;      ///< board revision
-    uint32_t    flash_size;     ///< flash size
+    quint32	bl_rev;         ///< bootloader revision
+    quint32    board_id;       ///< board ID
+    quint32    board_rev;      ///< board revision
+    quint32    flash_size;     ///< flash size
 
 	void			log(const char *fmt, ...);
 

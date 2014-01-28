@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
  ****************************************************************************/
 
 /**
- * @file Firmware uploader for PX4IO
+ * @file uploader.cpp Firmware uploader for PX4IO
  */
 
 #include <sys/types.h>
@@ -347,7 +347,7 @@ PX4_Uploader::detect(int &r_board_id)
 
 QString PX4_Uploader::getBoardName()
 {
-    if (board_id >= 0 && board_id < boardNames.length()) {
+    if (board_id >= 0 && board_id < static_cast<quint32>(boardNames.length())) {
         return boardNames[board_id];
     } else {
         return "UNKNOWN";
