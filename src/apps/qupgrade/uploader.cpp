@@ -154,6 +154,14 @@ void PX4_Uploader::send_app_reboot()
     _io_fd->write(cmd_old, strlen(cmd_old));
     _io_fd->write(init, 2);
 
+#ifdef Q_OS_WIN
+    #pragma warning (push)
+    #pragma warning (disable:4309)
+#else
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wnarrowing"
+#endif
+
     // Reboot via MAVLink (if enabled)
     // Try system ID 1
     const char mavlink_msg_id1[] = {0xfe,0x21,0x72,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x01,0x00,0x00,0x48,0xf0};
@@ -161,6 +169,12 @@ void PX4_Uploader::send_app_reboot()
     // Try system ID 0 (broadcast)
     const char mavlink_msg_id0[] = {0xfe,0x21,0x45,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x00,0x00,0x00,0xd7,0xac};
     _io_fd->write(mavlink_msg_id0, sizeof(mavlink_msg_id0));
+
+#ifdef Q_OS_WIN
+    #pragma warning (pop)
+#else
+    #pragma GCC diagnostic pop
+#endif
 }
 
 int PX4_Uploader::get_bl_info(quint32 &board_id, quint32 &board_rev, quint32 &flash_size, QString &humanReadable, bool &insync)
@@ -347,7 +361,7 @@ PX4_Uploader::detect(int &r_board_id)
 
 QString PX4_Uploader::getBoardName()
 {
-    if (board_id >= 0 && board_id < static_cast<quint32>(boardNames.length())) {
+    if (board_id < static_cast<quint32>(boardNames.length())) {
         return boardNames[board_id];
     } else {
         return "UNKNOWN";
@@ -507,7 +521,7 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 
         // pad image to 4-byte length
         while ((b.count() % 4) != 0)
-            b.append(0xFF);
+            b.append(static_cast<char>(static_cast<unsigned char>(0xFF)));
 
         _fw_fd.write(b);
         _fw_fd.seek(0);
