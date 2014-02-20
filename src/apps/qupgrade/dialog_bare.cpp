@@ -125,7 +125,7 @@ void DialogBare::onToggleAdvancedMode(bool enabled)
 
 void DialogBare::loadSettings()
 {
-    QSettings set;
+    QSettings set("PX4", "QUpgrade");
     lastFilename = set.value("LAST_FILENAME", lastFilename).toString();
     ui->advancedCheckBox->setChecked(set.value("ADVANCED_MODE", false).toBool());
 
@@ -154,7 +154,7 @@ void DialogBare::loadSettings()
 
 void DialogBare::storeSettings()
 {
-    QSettings set;
+    QSettings set("PX4", "QUpgrade");
     if (lastFilename != "")
         set.setValue("LAST_FILENAME", lastFilename);
     set.setValue("ADVANCED_MODE", ui->advancedCheckBox->isChecked());
