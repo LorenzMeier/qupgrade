@@ -635,11 +635,14 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 			continue;
 		}
 
-		if (bl_rev <= 2)
+        if (bl_rev <= 2) {
 			ret = verify_rev2(fw_size);
-		else if(bl_rev == 3) {
+        } else if(bl_rev == 3) {
 			ret = verify_rev3(fw_size);
-		}
+        } else {
+           // rev 4 and higher still use verify rev3
+           ret = verify_rev3(fw_size);
+        }
 
 		if (ret != OK) {
             log("verify failed, please reset the board to retry..");
