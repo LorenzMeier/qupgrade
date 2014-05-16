@@ -290,7 +290,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
                 if (ret == -200) {
                     // Image is corrupt
-                    emit upgradeStatusChanged(tr("Corrupt binary, aborting"));
+                    emit upgradeStatusChanged(tr("Unable to load binary, aborting. Missing Internet connection?"));
                     emit loadFinished(false);
                     emit finished();
                     port->close();
