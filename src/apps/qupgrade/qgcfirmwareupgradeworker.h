@@ -24,10 +24,10 @@ signals:
 public slots:
 
     /**
-     * @brief Continously scan for bootloaders
+     * @brief Continuously scan for bootloaders
      * @return
      */
-    void startContinousScan();
+    void startContinuousScan();
 
     /**
      * @brief Aborts a currently running upload
