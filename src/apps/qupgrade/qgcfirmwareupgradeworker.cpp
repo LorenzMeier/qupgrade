@@ -64,7 +64,7 @@ QGCFirmwareUpgradeWorker* QGCFirmwareUpgradeWorker::putDetectorInThread()
     return worker;
 }
 
-void QGCFirmwareUpgradeWorker::startContinousScan()
+void QGCFirmwareUpgradeWorker::startContinuousScan()
 {
     exitThread = false;
     while (!exitThread) {
