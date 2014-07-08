@@ -8,8 +8,8 @@ namespace Ui {
     class DialogBare;
 }
 class QTimer;
-class QextSerialPort;
-class QextSerialEnumerator;
+class QSerialPort;
+class QSerialPortInfo;
 class QGCFirmwareUpgradeWorker;
 class QNetworkRequest;
 class QNetworkReply;
@@ -57,8 +57,8 @@ private:
     bool loading;
     Ui::DialogBare *ui;
     QTimer *timer;
-    QextSerialPort *port;
-    QextSerialEnumerator *enumerator;
+    QSerialPort *port;
+    QSerialPortInfo *enumerator;
     QGCFirmwareUpgradeWorker *worker;
     QWidget *boardFoundWidget;
 

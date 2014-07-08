@@ -52,8 +52,8 @@ private:
     bool loading;
     Ui::Dialog *ui;
     QTimer *timer;
-    QextSerialPort *port;
-    QextSerialEnumerator *enumerator;
+    QSerialPort *port;
+    QSerialPortInfo *enumerator;
     QGCFirmwareUpgradeWorker *worker;
 
     QString lastFilename;
