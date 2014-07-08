@@ -1,5 +1,5 @@
-#include "qextserialport.h"
-#include "qextserialenumerator.h"
+#include <QSerialPort>
+#include <QSerialPortInfo>
 #include "dialog_bare.h"
 #include "ui_dialog_bare.h"
 #include <QtCore>
@@ -35,19 +35,17 @@ DialogBare::DialogBare(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        if (!info.portName.isEmpty())
-            ui->portBox->addItem(info.portName);
+    foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+        if (!info.portName().isEmpty())
+            ui->portBox->addItem(info.portName());
     //make sure user can input their own port name!
     ui->portBox->setEditable(true);
 
 //    ui->led->turnOff();
 
-    PortSettings settings = {BAUD9600, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-    port = new QextSerialPort(ui->portBox->currentText(), settings, QextSerialPort::Polling);
+    port = new QSerialPort(ui->portBox->currentText());
 
-    enumerator = new QextSerialEnumerator(this);
-    enumerator->setUpNotifications();
+    enumerator = new QSerialPortInfo();
 
     ui->boardComboBox->addItem("PX4FMU v1.6+", 5);
     ui->boardComboBox->addItem("PX4FLOW v1.1+", 6);
@@ -65,8 +63,9 @@ DialogBare::DialogBare(QWidget *parent) :
 
     connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
 
-    connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
-    connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
+    // XXX check equivalent
+//    connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
+//    connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
 
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 
@@ -285,7 +284,7 @@ void DialogBare::onDownloadRequested(const QNetworkRequest &request)
 
 void DialogBare::onPortNameChanged(const QString & /*name*/)
 {
-    if (port->isOpen()) {
+    if (port->open(QIODevice::ReadWrite)) {
         port->close();
 //        ui->led->turnOff();
     }
@@ -461,8 +460,8 @@ void DialogBare::onPortAddedOrRemoved()
     for (int i = 0; i < ui->portBox->count(); i++)
     {
         bool found = false;
-        foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-            if (info.portName == ui->portBox->itemText(i))
+        foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+            if (info.portName() == ui->portBox->itemText(i))
                 found = true;
 
         if (!found && !ui->portBox->itemText(i).contains("Automatic"))
@@ -470,11 +469,13 @@ void DialogBare::onPortAddedOrRemoved()
     }
 
     // Add new ports
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        if (ui->portBox->findText(info.portName) < 0) {
-            if (!info.portName.isEmpty())
-                ui->portBox->addItem(info.portName);
+    foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+    {
+        if (ui->portBox->findText(info.portName()) < 0) {
+            if (!info.portName().isEmpty())
+                ui->portBox->addItem(info.portName());
         }
+    }
 
     ui->portBox->blockSignals(false);
 }

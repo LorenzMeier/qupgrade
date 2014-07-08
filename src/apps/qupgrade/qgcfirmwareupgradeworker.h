@@ -2,7 +2,7 @@
 #define QGCFirmwareUpgradeWorker_H
 
 #include <QObject>
-#include <qextserialport.h>
+#include <QSerialPort>
 
 class QGCFirmwareUpgradeWorker : public QObject
 {
@@ -81,7 +81,7 @@ private:
     bool _abortOnFirstError;
     int _filterBoardId;
     QString _fixedPortName;
-    QextSerialPort *port;
+    QSerialPort *port;
     QString filename;
 };
 

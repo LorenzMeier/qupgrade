@@ -111,7 +111,7 @@ crc32(const uint8_t *src, unsigned len, unsigned state)
 	return state;
 }
 
-PX4_Uploader::PX4_Uploader(QextSerialPort* port, QObject *parent) : QObject(parent),
+PX4_Uploader::PX4_Uploader(QSerialPort* port, QObject *parent) : QObject(parent),
     _io_fd(port)
 {
     boardNames.append("Zero");

@@ -2,14 +2,10 @@
 # QUpgrade - Cross-platform firmware flashing tool
 #
 
-QT       += core gui widgets webkit network webkitwidgets
+QT       += core gui widgets webkit network webkitwidgets serialport
 
 TARGET = qupgrade
 TEMPLATE = app
-
-linux*:CONFIG += qesp_linux_udev
-
-include(libs/qextserialport/src/qextserialport.pri)
 
 SOURCES += src/apps/qupgrade/main.cpp\
         src/apps/qupgrade/dialog.cpp\

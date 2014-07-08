@@ -39,7 +39,7 @@
 #define _PX4_Uploader_H value
 
 #include <stdint.h>
-#include <qextserialport.h>
+#include <QSerialPort>
 
 #include <QObject>
 #include <QFile>
@@ -49,7 +49,7 @@ class PX4_Uploader : public QObject
 {
     Q_OBJECT
 public:
-    PX4_Uploader(QextSerialPort* port, QObject *parent=NULL);
+    PX4_Uploader(QSerialPort* port, QObject *parent=NULL);
     virtual ~PX4_Uploader();
 
     int upload(const QString& filename, int filterId=-1, bool insync=false);
@@ -91,7 +91,7 @@ private:
 
 	};
 
-    QextSerialPort*		_io_fd;
+    QSerialPort*		_io_fd;
     QFile		_fw_fd;
     QList<QString> boardNames;
 

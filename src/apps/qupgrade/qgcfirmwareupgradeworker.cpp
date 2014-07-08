@@ -1,11 +1,11 @@
 //#include <QJsonDocument>
 #include <QFile>
+#include <QSerialPortInfo>
 
 #include "qgcfirmwareupgradeworker.h"
 
 #include <QGC.h>
 #include "uploader.h"
-#include "qextserialenumerator.h"
 
 #include <QDebug>
 
@@ -115,27 +115,25 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
         QGC::SLEEP::usleep(200000);
 
-        QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
+        QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
 
-        foreach (QextPortInfo info, ports) {
+        foreach (QSerialPortInfo info, ports) {
 
             // Check for valid handles
-            if (info.portName.isEmpty())
+            if (info.portName().isEmpty())
                 continue;
 
-            if ((_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
-                    (info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)))) {
+            if ((_fixedPortName == info.portName() || (_fixedPortName.isEmpty() &&
+                    (info.description().contains("PX4") || info.vendorIdentifier() == 9900 /* 3DR */)))) {
 
-                qDebug() << "port name:"       << info.portName;
-                qDebug() << "friendly name:"   << info.friendName;
-                qDebug() << "physical name:"   << info.physName;
-                qDebug() << "enumerator name:" << info.enumName;
-                qDebug() << "vendor ID:"       << info.vendorID;
-                qDebug() << "product ID:"      << info.productID;
+                qDebug() << "port name:"       << info.portName();
+                qDebug() << "system location:"   << info.systemLocation();
+                qDebug() << "serial number"   << info.serialNumber();
+                qDebug() << "vendor ID:"       << info.vendorIdentifier();
 
                 qDebug() << "===================================";
 
-                QString openString = info.portName;
+                QString openString = info.portName();
 
                 // Stupid windows fixes
 #ifdef Q_OS_WIN
@@ -144,11 +142,7 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 #endif
 
                 if (port == NULL) {
-                    PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-
-                    port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
-                    port->setTimeout(0);
-                    port->setQueryMode(QextSerialPort::Polling);
+                    port = new QSerialPort(openString);
                     // XXX black magic to convince Qextserialport to cooperate on first attempt
                     port->close();
                     port->setPortName(openString);
@@ -166,10 +160,10 @@ void QGCFirmwareUpgradeWorker::detectBoards()
 
                 // Die-hard flash the binary
 
-                if ((info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)) {
-                    emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+                if ((info.description().contains("PX4") || info.vendorIdentifier() == 9900 /* 3DR */)) {
+                    emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName()));
                 } else {
-                    emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName));
+                    emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName()));
                 }
 
                 //            quint32 board_id;
@@ -220,31 +214,29 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
         QGC::SLEEP::usleep(200000);
 
-        QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
+        QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
 
         int ret;
         bool boardFound = false;
         bool wrongBoard = false;
 
-        foreach (QextPortInfo info, ports) {
+        foreach (QSerialPortInfo info, ports) {
 
             // Check for valid handles
-            if (info.portName.isEmpty())
+            if (info.portName().isEmpty())
                 continue;
 
-            if ((filename.endsWith(".bin") || filename.endsWith(".px4")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
-                    (info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)))) {
+            if ((filename.endsWith(".bin") || filename.endsWith(".px4")) && (_fixedPortName == info.portName() || (_fixedPortName.isEmpty() &&
+                    (info.description().contains("PX4") || info.vendorIdentifier() == 9900 /* 3DR */)))) {
 
-                qDebug() << "port name:"       << info.portName;
-                qDebug() << "friendly name:"   << info.friendName;
-                qDebug() << "physical name:"   << info.physName;
-                qDebug() << "enumerator name:" << info.enumName;
-                qDebug() << "vendor ID:"       << info.vendorID;
-                qDebug() << "product ID:"      << info.productID;
+                qDebug() << "port name:"       << info.portName();
+                qDebug() << "system location:"   << info.systemLocation();
+                qDebug() << "serial number"   << info.serialNumber();
+                qDebug() << "vendor ID:"       << info.vendorIdentifier();
 
                 qDebug() << "===================================";
 
-                QString openString = info.portName;
+                QString openString = info.portName();
 
                 // Stupid windows fixes
 #ifdef Q_OS_WIN
@@ -258,11 +250,7 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                 // Spawn upload thread
 
                 if (port == NULL) {
-                    PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-
-                    port = new QextSerialPort(openString, settings, QextSerialPort::Polling);
-                    port->setTimeout(0);
-                    port->setQueryMode(QextSerialPort::Polling);
+                    port = new QSerialPort(openString);
                     // XXX black magic to convince Qextserialport to cooperate on first attempt
                     port->close();
                     port->setPortName(openString);
@@ -280,10 +268,10 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
 
                 // Die-hard flash the binary
 
-                if ((info.physName.contains("PX4") || info.vendorID == 9900 /* 3DR */)) {
-                    emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName));
+                if ((info.description().contains("PX4") || info.vendorIdentifier() == 9900 /* 3DR */)) {
+                    emit upgradeStatusChanged(tr("Found PX4 board on port %1").arg(info.portName()));
                 } else {
-                    emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName));
+                    emit upgradeStatusChanged(tr("No PX4 board found on port %1 (manual override)").arg(info.portName()));
                 }
 
                 ret = uploader.upload(filename, _filterBoardId);
@@ -314,8 +302,8 @@ void QGCFirmwareUpgradeWorker::loadFirmware()
                     port->close();
                     return;
                 }
-            } else if ((filename.endsWith(".ihx") || filename.endsWith(".ihex") || filename.endsWith(".hex")) && (_fixedPortName == info.portName || (_fixedPortName.isEmpty() &&
-                                  (info.physName.contains("3DR Radio") || info.vendorID == 9900 /* 3DR */)))) {
+            } else if ((filename.endsWith(".ihx") || filename.endsWith(".ihex") || filename.endsWith(".hex")) && (_fixedPortName == info.portName() || (_fixedPortName.isEmpty() &&
+                                  (info.description().contains("3DR Radio") || info.vendorIdentifier() == 9900 /* 3DR */)))) {
 
             }
         }
