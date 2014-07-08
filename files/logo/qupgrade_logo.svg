@@ -10,15 +10,15 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="744.09448819"
-   height="1052.3622047"
+   width="256"
+   height="256"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.2 r9819"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="qupgrade_logo.svg"
-   inkscape:export-filename="/Users/lomeier/Documents/logos/qupgrade_logo.png"
-   inkscape:export-xdpi="197.41441"
-   inkscape:export-ydpi="197.41441">
+   inkscape:export-filename="/home/joes/Dropbox/src/qupgrade/files/logo/32x32/qupgrade.png"
+   inkscape:export-xdpi="11.25"
+   inkscape:export-ydpi="11.25">
   <defs
      id="defs4">
     <linearGradient
@@ -194,17 +194,21 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8495471"
-     inkscape:cx="356.41284"
-     inkscape:cy="674.87081"
+     inkscape:zoom="1.4247736"
+     inkscape:cx="15.490447"
+     inkscape:cy="143.01142"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1155"
      inkscape:window-height="813"
-     inkscape:window-x="271"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0" />
+     inkscape:window-x="279"
+     inkscape:window-y="56"
+     inkscape:window-maximized="0"
+     fit-margin-top="5"
+     fit-margin-left="11"
+     fit-margin-right="11"
+     fit-margin-bottom="5" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -220,7 +224,8 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-198.21313,-271.39646)">
     <path
        style="fill:url(#radialGradient3898);fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 209.71313,398.67523 c 0.069,-75.69146 67.60685,-102.97801 67.60685,-102.97801 l -8.58216,-19.30988 63.29347,13.94603 -31.11034,57.9296 -9.65494,-20.38264 c 0,0 -46.50672,16.89576 -48.29062,69.72691 -1.78391,52.83115 56.34197,83.12777 56.34197,83.12777 l -19.2812,27.89841 c -57.00929,-35.8063 -68.38208,-67.00383 -70.32303,-109.95819 z"
