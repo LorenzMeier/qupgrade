@@ -143,16 +143,22 @@ void PX4_Uploader::send_app_reboot()
     // Start NSH
     const char init[] = {0x0d, 0x0d, 0x0d};
     _io_fd->write(init, sizeof(init));
+    _io_fd->flush();
+    _io_fd->waitForBytesWritten(100);
 
     // Reboot into bootloader
     const char* cmd = "reboot -b\n";
     _io_fd->write(cmd, strlen(cmd));
     _io_fd->write(init, 2);
+    _io_fd->flush();
+    _io_fd->waitForBytesWritten(100);
 
     // Old reboot command
     const char* cmd_old = "reboot\n";
     _io_fd->write(cmd_old, strlen(cmd_old));
     _io_fd->write(init, 2);
+    _io_fd->flush();
+    _io_fd->waitForBytesWritten(100);
 
 #ifdef Q_OS_WIN
     #pragma warning (push)
@@ -166,9 +172,13 @@ void PX4_Uploader::send_app_reboot()
     // Try system ID 1
     const char mavlink_msg_id1[] = {0xfe,0x21,0x72,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x01,0x00,0x00,0x48,0xf0};
     _io_fd->write(mavlink_msg_id1, sizeof(mavlink_msg_id1));
+    _io_fd->flush();
+    _io_fd->waitForBytesWritten(100);
     // Try system ID 0 (broadcast)
     const char mavlink_msg_id0[] = {0xfe,0x21,0x45,0xff,0x00,0x4c,0x00,0x00,0x80,0x3f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf6,0x00,0x00,0x00,0x00,0xd7,0xac};
     _io_fd->write(mavlink_msg_id0, sizeof(mavlink_msg_id0));
+    _io_fd->flush();
+    _io_fd->waitForBytesWritten(100);
 
 #ifdef Q_OS_WIN
     #pragma warning (pop)
@@ -252,7 +262,8 @@ PX4_Uploader::detect(int &r_board_id)
     bool insync = false;
 
     if (!_io_fd->isOpen()) {
-        _io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+        _io_fd->open(QIODevice::ReadWrite);
+        _io_fd->setTextModeEnabled(false);
 
         // If still not open, complain and exit
         if (!_io_fd->isOpen()) {
@@ -390,7 +401,8 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 	size_t fw_size;
 
     if (!_io_fd->isOpen()) {
-        _io_fd->open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+        _io_fd->open(QIODevice::ReadWrite);
+        _io_fd->setTextModeEnabled(false);
 
         // If still not open, complain and exit
         if (!_io_fd->isOpen()) {
@@ -694,32 +706,64 @@ PX4_Uploader::upload(const QString& filename, int filterId, bool insync)
 }
 
 int
-PX4_Uploader::recv(uint8_t &c, unsigned timeout)
+PX4_Uploader::recv_single(uint8_t &c, unsigned timeout)
 {
-    quint64 startTime = QGC::groundTimeMilliseconds();
 
-    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
-        QGC::SLEEP::usleep(500);
-    }
-
-    if (_io_fd->bytesAvailable() < 1) {
-        //log("poll timeout");
-        return -ETIMEDOUT;
+    if(_io_fd->waitForReadyRead(timeout)) {
+//        QByteArray arr = _io_fd->read(1);
+//        c = arr.at(0);
+//        log("recv 0x%02x", c);
+        char c2;
+        _io_fd->getChar(&c2);
+        log("recv 0x%02x", c2);
+        c = c2;
     } else {
-        QByteArray arr = _io_fd->read(1);
-        c = arr.at(0);
+        qDebug("recv timeout");
+        return -ETIMEDOUT;
     }
 
-    //log("recv 0x%02x", c);
+//    quint64 startTime = QGC::groundTimeMilliseconds();
+
+//    while (_io_fd->bytesAvailable() < 1 && QGC::groundTimeMilliseconds() < (startTime + timeout)) {
+//        QGC::SLEEP::usleep(500);
+//    }
+
+//    if (_io_fd->bytesAvailable() < 1) {
+//        //log("poll timeout");
+//        return -ETIMEDOUT;
+//    } else {
+//        QByteArray arr = _io_fd->read(1);
+//        c = arr.at(0);
+//    }
+
+
 
 	return OK;
 }
+
+//int
+//PX4_Uploader::recv_multi(uint8_t *c, unsigned maxcount, unsigned timeout)
+//{
+
+//    if(_io_fd->waitForReadyRead(timeout)) {
+//        QByteArray arr = _io_fd->readAll();
+//        for (unsigned i = 0; i < arr.count(), i < maxcount; i++) {
+//            c[i] = arr.at(i);
+//            log("recv 0x%02x", c[i]);
+//        }
+//    } else {
+//        qDebug("recv timeout");
+//        return -ETIMEDOUT;
+//    }
+
+//    return OK;
+//}
 
 int
 PX4_Uploader::recv(uint8_t *p, unsigned count)
 {
 	while (count--) {
-        int ret = recv(*p++, 5000);
+        int ret = recv_single(*p++, 5000);
 
 		if (ret != OK)
 			return ret;
@@ -735,7 +779,7 @@ PX4_Uploader::drain()
 	int ret;
 
 	do {
-        ret = recv(c, 1);
+        ret = recv_single(c, 1);
 
 		if (ret == OK) {
 			//log("discard 0x%02x", c);
@@ -746,15 +790,7 @@ PX4_Uploader::drain()
 int
 PX4_Uploader::send(uint8_t c)
 {
-    //log("send 0x%02x", c);
-    if (_io_fd->write((char*)&c, 1) != 1)
-    {
-		return -errno;
-    } else {
-        _io_fd->flush();
-    }
-
-    return OK;
+    return !_io_fd->putChar(c);//send(&c, 1);
 }
 
 int
@@ -762,10 +798,14 @@ PX4_Uploader::send(uint8_t *p, unsigned count)
 {
     if (_io_fd->write((const char*)p, count) != count)
     {
+        log("SERIAL PORT ERROR");
         return -errno;
     } else {
-//        log("sent %d bytes", count);
-        _io_fd->flush();
+
+        if (!_io_fd->waitForBytesWritten(100)) {
+            log("serial port write timeout");
+            return -errno;
+        }
     }
 
 	return OK;
@@ -777,17 +817,21 @@ PX4_Uploader::get_sync(unsigned timeout)
 	uint8_t c[2];
 	int ret;
 
-	ret = recv(c[0], timeout);
+    ret = recv_single(c[0], timeout);
 
-	if (ret != OK)
-		return ret;
+    if (ret != OK) {
+        log("sync timeout: board not responding");
+        return ret;
+    }
 
-	ret = recv(c[1], timeout);
+    ret = recv_single(c[1], timeout);
 
-	if (ret != OK)
-		return ret;
+    if (ret != OK) {
+        log("sync timeout: board not responding for 2nd byte");
+        return ret;
+    }
 
-	if ((c[0] != PROTO_INSYNC) || (c[1] != PROTO_OK)) {
+    if ((c[0] != PROTO_INSYNC) || (c[1] != PROTO_OK)) {
 		log("bad sync 0x%02x,0x%02x", c[0], c[1]);
 		return -EIO;
 	}
@@ -803,12 +847,21 @@ PX4_Uploader::sync()
     qDebug() << "DRAIN END";
 
 	/* complete any pending program operation */
-	for (unsigned i = 0; i < (PROG_MULTI_MAX + 6); i++)
-		send(0);
+    for (unsigned i = 0; i < (PROG_MULTI_MAX + 6); i++) {
+        int res = send(PROTO_NOP);
+        if (res) {
+            log("send error");
+        }
+    }
 
-	send(PROTO_GET_SYNC);
-	send(PROTO_EOC);
-    qDebug() << "GET SYNC START";
+    int res = send(PROTO_GET_SYNC);
+    if (res) {
+        log("get sync send error");
+    }
+    res = send(PROTO_EOC);
+    if (res) {
+        log("proto eoc send error");
+    }
 	return get_sync();
 }
 
@@ -959,7 +1012,7 @@ PX4_Uploader::verify_rev2(size_t fw_size)
         for (int i = 0; i < count; i++) {
 			uint8_t c;
 
-            ret = recv(c, 5000);
+            ret = recv_single(c, 5000);
 
 			if (ret != OK) {
 				log("%d: got %d waiting for bytes", sent + i, ret);

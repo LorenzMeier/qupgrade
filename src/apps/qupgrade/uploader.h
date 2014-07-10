@@ -102,7 +102,7 @@ private:
 
 	void			log(const char *fmt, ...);
 
-	int			recv(uint8_t &c, unsigned timeout);
+    int			recv_single(uint8_t &c, unsigned timeout);
 	int			recv(uint8_t *p, unsigned count);
 	void			drain();
 	int			send(uint8_t c);
