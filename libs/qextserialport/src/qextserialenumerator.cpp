@@ -159,5 +159,3 @@ void QextSerialEnumerator::setUpNotifications()
     if (!d->setUpNotifications_sys(true))
         QESP_WARNING("Setup Notification Failed...");
 }
-
-#include "moc_qextserialenumerator.cpp"

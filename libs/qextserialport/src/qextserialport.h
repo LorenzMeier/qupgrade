@@ -231,8 +231,8 @@ private:
 
 #ifdef Q_OS_WIN
     Q_PRIVATE_SLOT(d_func(), void _q_onWinEvent(HANDLE))
-#endif
     Q_PRIVATE_SLOT(d_func(), void _q_canRead())
+#endif
 
     QextSerialPortPrivate * const d_ptr;
 };
