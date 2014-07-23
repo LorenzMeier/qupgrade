@@ -38,31 +38,31 @@
 
 void QextSerialEnumeratorPrivate::platformSpecificInit()
 {
-#ifndef QESP_NO_UDEV
-    monitor = NULL;
-    notifierFd = -1;
-    notifier = NULL;
+// #ifndef QESP_NO_UDEV
+//     monitor = NULL;
+//     notifierFd = -1;
+//     notifier = NULL;
 
-    udev = udev_new();
-    if (!udev)
-        qCritical() << "Unable to initialize udev notifications";
-#endif
+//     udev = udev_new();
+//     if (!udev)
+//         qCritical() << "Unable to initialize udev notifications";
+// #endif
 }
 
 void QextSerialEnumeratorPrivate::platformSpecificDestruct()
 {
-#ifndef QESP_NO_UDEV
-    if (notifier) {
-        notifier->setEnabled(false);
-        delete notifier;
-    }
+// #ifndef QESP_NO_UDEV
+//     if (notifier) {
+//         notifier->setEnabled(false);
+//         delete notifier;
+//     }
 
-    if (monitor)
-        udev_monitor_unref(monitor);
+//     if (monitor)
+//         udev_monitor_unref(monitor);
 
-    if (udev)
-        udev_unref(udev);
-#endif
+//     if (udev)
+//         udev_unref(udev);
+// #endif
 }
 
 #ifndef QESP_NO_UDEV
@@ -84,73 +84,73 @@ static QextPortInfo portInfoFromDevice(struct udev_device *dev)
 QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
 {
     QList<QextPortInfo> infoList;
-#ifndef QESP_NO_UDEV
-    struct udev *ud = udev_new();
-    if (!ud) {
-        qCritical() << "Unable to enumerate ports because udev is not initialized.";
-        return infoList;
-    }
+// #ifndef QESP_NO_UDEV
+//     struct udev *ud = udev_new();
+//     if (!ud) {
+//         qCritical() << "Unable to enumerate ports because udev is not initialized.";
+//         return infoList;
+//     }
 
-    struct udev_enumerate *enumerate = udev_enumerate_new(ud);
-    udev_enumerate_add_match_subsystem(enumerate, "tty");
-    udev_enumerate_scan_devices(enumerate);
-    struct udev_list_entry *list = udev_enumerate_get_list_entry(enumerate);
-    struct udev_list_entry *entry;
-    udev_list_entry_foreach(entry, list) {
-        const char *path;
-        struct udev_device *dev;
+//     struct udev_enumerate *enumerate = udev_enumerate_new(ud);
+//     udev_enumerate_add_match_subsystem(enumerate, "tty");
+//     udev_enumerate_scan_devices(enumerate);
+//     struct udev_list_entry *list = udev_enumerate_get_list_entry(enumerate);
+//     struct udev_list_entry *entry;
+//     udev_list_entry_foreach(entry, list) {
+//         const char *path;
+//         struct udev_device *dev;
 
-        // Have to grab the actual udev device here...
-        path = udev_list_entry_get_name(entry);
-        dev = udev_device_new_from_syspath(ud, path);
+//         // Have to grab the actual udev device here...
+//         path = udev_list_entry_get_name(entry);
+//         dev = udev_device_new_from_syspath(ud, path);
 
-        infoList.append(portInfoFromDevice(dev));
+//         infoList.append(portInfoFromDevice(dev));
 
-        // Done with this device
-        udev_device_unref(dev);
-    }
-    // Done with the list and this udev
-    udev_enumerate_unref(enumerate);
-    udev_unref(ud);
+//         // Done with this device
+//         udev_device_unref(dev);
+//     }
+//     // Done with the list and this udev
+//     udev_enumerate_unref(enumerate);
+//     udev_unref(ud);
 
-    // get the non standard serial ports names
-    // (USB-serial, bluetooth-serial, 18F PICs, and so on)
-    // if you know an other name prefix for serial ports please let us know
-    //    portNamePrefixes.clear();
-    //    portNamePrefixes << QLatin1String("rfcomm*");
-    //    portNamePrefixes << QLatin1String("serial/by-id/usb-*");
-    //    portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
+//     // get the non standard serial ports names
+//     // (USB-serial, bluetooth-serial, 18F PICs, and so on)
+//     // if you know an other name prefix for serial ports please let us know
+//     //    portNamePrefixes.clear();
+//     //    portNamePrefixes << QLatin1String("rfcomm*");
+//     //    portNamePrefixes << QLatin1String("serial/by-id/usb-*");
+//     //    portNameList += dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
 
-    //    foreach (QString str , portNameList) {
-    //        QextPortInfo inf;
-    //        inf.physName = QLatin1String("/dev/")+str;
-    //        inf.portName = str;
+//     //    foreach (QString str , portNameList) {
+//     //        QextPortInfo inf;
+//     //        inf.physName = QLatin1String("/dev/")+str;
+//     //        inf.portName = str;
 
-    //        if (str.contains(QLatin1String("rfcomm"))) {
-    //            inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
-    //        }
-    //        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
-    //            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
-    //        }
-    //        inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
-    //        infoList.append(inf);
-    //    }
+//     //        if (str.contains(QLatin1String("rfcomm"))) {
+//     //            inf.friendName = QLatin1String("Bluetooth-serial adapter ")+str.remove(0, 6);
+//     //        }
+//     //        else if (str.contains(QLatin1String("serial/by-id/usb-"))) {
+//     //            inf.friendName = QLatin1String("USB-serial adapter ")+str.remove(0, 17);
+//     //        }
+//     //        inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
+//     //        infoList.append(inf);
+//     //    }
 
-    QList<QextPortInfo>::iterator it = infoList.begin();
-    while (it != infoList.end()) {
-        if (it->portName.contains(QString("ttyACM")))
-        {
-            qDebug() << __FILE__ << __LINE__ << "Found: " << it->portName;
-            ++it;
-        }
-        else
-        {
-            it = infoList.erase(it);
-        }
-    }
+//     QList<QextPortInfo>::iterator it = infoList.begin();
+//     while (it != infoList.end()) {
+//         if (it->portName.contains(QString("ttyACM")))
+//         {
+//             qDebug() << __FILE__ << __LINE__ << "Found: " << it->portName;
+//             ++it;
+//         }
+//         else
+//         {
+//             it = infoList.erase(it);
+//         }
+//     }
 
 
-#else
+// #else
     QStringList portNamePrefixes, portNameList;
     portNamePrefixes << QLatin1String("ttyS*"); // list normal serial ports first
 
@@ -197,7 +197,7 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
         inf.enumName = QLatin1String("/dev"); // is there a more helpful name for this?
         infoList.append(inf);
     }
-#endif
+// #endif
 
     return infoList;
 }
@@ -205,48 +205,48 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
 bool QextSerialEnumeratorPrivate::setUpNotifications_sys(bool setup)
 {
     Q_UNUSED(setup);
-#ifndef QESP_NO_UDEV
-    Q_Q(QextSerialEnumerator);
-    if (!udev) {
-        qCritical() << "Unable to initialize notifications because udev is not initialized.";
-        return false;
-    }
+// #ifndef QESP_NO_UDEV
+//     Q_Q(QextSerialEnumerator);
+//     if (!udev) {
+//         qCritical() << "Unable to initialize notifications because udev is not initialized.";
+//         return false;
+//     }
 
-    // Emit signals immediately for devices already connected (Windows version seems to behave
-    // this way)
-    foreach (QextPortInfo i, getPorts_sys())
-        Q_EMIT q->deviceDiscovered(i);
+//     // Emit signals immediately for devices already connected (Windows version seems to behave
+//     // this way)
+//     foreach (QextPortInfo i, getPorts_sys())
+//         Q_EMIT q->deviceDiscovered(i);
 
-    // Look for tty devices from udev.
-    monitor = udev_monitor_new_from_netlink(udev, "udev");
-    udev_monitor_filter_add_match_subsystem_devtype(monitor, "tty", NULL);
-    udev_monitor_enable_receiving(monitor);
-    notifierFd = udev_monitor_get_fd(monitor);
-    notifier = new QSocketNotifier(notifierFd, QSocketNotifier::Read);
-    q->connect(notifier, SIGNAL(activated(int)), q, SLOT(_q_deviceEvent()));
-    notifier->setEnabled(true);
+//     // Look for tty devices from udev.
+//     monitor = udev_monitor_new_from_netlink(udev, "udev");
+//     udev_monitor_filter_add_match_subsystem_devtype(monitor, "tty", NULL);
+//     udev_monitor_enable_receiving(monitor);
+//     notifierFd = udev_monitor_get_fd(monitor);
+//     notifier = new QSocketNotifier(notifierFd, QSocketNotifier::Read);
+//     q->connect(notifier, SIGNAL(activated(int)), q, SLOT(_q_deviceEvent()));
+//     notifier->setEnabled(true);
 
-    return true;
-#else
+//     return true;
+// #else
     return false;
-#endif
+// #endif
 }
 
-#ifndef QESP_NO_UDEV
-void QextSerialEnumeratorPrivate::_q_deviceEvent()
-{
-    Q_Q(QextSerialEnumerator);
-    struct udev_device *dev = udev_monitor_receive_device(monitor);
-    if (dev) {
-        QextPortInfo pi = portInfoFromDevice(dev);
-        QLatin1String action(udev_device_get_action(dev));
+// #ifndef QESP_NO_UDEV
+// void QextSerialEnumeratorPrivate::_q_deviceEvent()
+// {
+//     Q_Q(QextSerialEnumerator);
+//     struct udev_device *dev = udev_monitor_receive_device(monitor);
+//     if (dev) {
+//         QextPortInfo pi = portInfoFromDevice(dev);
+//         QLatin1String action(udev_device_get_action(dev));
 
-        if (action == QLatin1String("add"))
-            Q_EMIT q->deviceDiscovered(pi);
-        else if (action == QLatin1String("remove"))
-            Q_EMIT q->deviceRemoved(pi);
+//         if (action == QLatin1String("add"))
+//             Q_EMIT q->deviceDiscovered(pi);
+//         else if (action == QLatin1String("remove"))
+//             Q_EMIT q->deviceRemoved(pi);
 
-        udev_device_unref(dev);
-    }
-}
-#endif
+//         udev_device_unref(dev);
+//     }
+// }
+// #endif
