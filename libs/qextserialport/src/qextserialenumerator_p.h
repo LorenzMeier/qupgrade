@@ -109,14 +109,14 @@ public:
     IONotificationPortRef notificationPortRef;
 #endif // Q_OS_MAC
 
-#if defined(Q_OS_LINUX) && !defined(QESP_NO_UDEV)
-    QSocketNotifier *notifier;
-    int notifierFd;
-    struct udev *udev;
-    struct udev_monitor *monitor;
+// #if defined(Q_OS_LINUX) && !defined(QESP_NO_UDEV)
+//     QSocketNotifier *notifier;
+//     int notifierFd;
+//     struct udev *udev;
+//     struct udev_monitor *monitor;
 
-    void _q_deviceEvent();
-#endif
+//     void _q_deviceEvent();
+// #endif
 
 private:
     QextSerialEnumerator *q_ptr;
