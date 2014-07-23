@@ -112,7 +112,7 @@ public:
 // #if defined(Q_OS_LINUX) && !defined(QESP_NO_UDEV)
 //     QSocketNotifier *notifier;
 //     int notifierFd;
-//     struct udev *udev;
+     struct udev *udev;
 //     struct udev_monitor *monitor;
 
 //     void _q_deviceEvent();
