@@ -2,6 +2,7 @@
 #define DIALOG_H
 
 #include <QWidget>
+#include <QSerialPort>
 #include <QUrl>
 
 namespace Ui {
@@ -53,7 +54,6 @@ private:
     Ui::Dialog *ui;
     QTimer *timer;
     QSerialPort *port;
-    QSerialPortInfo *enumerator;
     QGCFirmwareUpgradeWorker *worker;
 
     QString lastFilename;
