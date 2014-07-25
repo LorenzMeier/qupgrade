@@ -1,5 +1,5 @@
-#include "qextserialport.h"
-#include "qextserialenumerator.h"
+#include <QSerialPortInfo>
+#include <QSerialPort>
 #include "dialog.h"
 #include "ui_dialog.h"
 #include <QtCore>
@@ -8,11 +8,7 @@
 #include <QThread>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QStandardPaths>
-#else
-#include <QDesktopServices>
-#endif
 #include <QFileInfo>
 #include <QApplication>
 #include <QDesktopWidget>
@@ -32,19 +28,20 @@ Dialog::Dialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        if (!info.portName.isEmpty())
-            ui->portBox->addItem(info.portName);
+    foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+        if (!info.portName().isEmpty())
+            ui->portBox->addItem(info.portName());
     //make sure user can input their own port name!
     ui->portBox->setEditable(true);
 
 //    ui->led->turnOff();
 
-    PortSettings settings = {BAUD9600, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-    port = new QextSerialPort(ui->portBox->currentText(), settings, QextSerialPort::Polling);
-
-    enumerator = new QextSerialEnumerator(this);
-    enumerator->setUpNotifications();
+    // Configure a default serial port
+    port = new QSerialPort(ui->portBox->currentText());
+    port->setBaudRate(QSerialPort::Baud9600);
+    port->setDataBits(QSerialPort::Data8);
+    port->setParity(QSerialPort::NoParity);
+    port->setStopBits(QSerialPort::OneStop);
 
     ui->boardComboBox->addItem("PX4FMU v1.6+", 5);
     ui->boardComboBox->addItem("PX4FLOW v1.1+", 6);
@@ -75,8 +72,7 @@ Dialog::Dialog(QWidget *parent) :
 
     connect(ui->advancedCheckBox, SIGNAL(clicked(bool)), this, SLOT(onToggleAdvancedMode(bool)));
 
-    connect(enumerator, SIGNAL(deviceDiscovered(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
-    connect(enumerator, SIGNAL(deviceRemoved(QextPortInfo)), SLOT(onPortAddedOrRemoved()));
+    // FIXME: Restore functionality where removal of serialport is handled nicely (see onPortAddedOrRemoved())
 
     setWindowTitle(tr("QUpgrade Firmware Upload / Configuration Tool"));
 
@@ -458,8 +454,8 @@ void Dialog::onPortAddedOrRemoved()
     for (int i = 0; i < ui->portBox->count(); i++)
     {
         bool found = false;
-        foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-            if (info.portName == ui->portBox->itemText(i))
+        foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+            if (info.portName() == ui->portBox->itemText(i))
                 found = true;
 
         if (!found && !ui->portBox->itemText(i).contains("Automatic"))
@@ -467,10 +463,10 @@ void Dialog::onPortAddedOrRemoved()
     }
 
     // Add new ports
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
-        if (ui->portBox->findText(info.portName) < 0) {
-            if (!info.portName.isEmpty())
-                ui->portBox->addItem(info.portName);
+    foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts())
+        if (ui->portBox->findText(info.portName()) < 0) {
+            if (!info.portName().isEmpty())
+                ui->portBox->addItem(info.portName());
         }
 
     ui->portBox->blockSignals(false);
